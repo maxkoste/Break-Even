@@ -26,11 +26,11 @@ No flashy animations.
 Just you, the deck, and a mounting sense that Mike might never emotionally recover from this.
 
 **Features**
-	•	A simple, responsive browser UI written in JavaScript.
-	•	A Python backend that handles shuffling, dealing, hit/stand logic, and balance updates.
-	•	A persistent running total of your monstrous debt.
-	•	Text messages from your wife reminding you what’s at stake.
-	•	The hollow thrill of chasing losses in retro 8-bit style.
+	- A simple, responsive browser UI written in JavaScript.
+	- A Python backend that handles shuffling, dealing, hit/stand logic, and balance updates.
+	- A persistent running total of your monstrous debt.
+	- Text messages from your wife reminding you what’s at stake.
+	- The hollow thrill of chasing losses in retro 8-bit style.
 
 **Gameplay Loop**
 	1.	Start at –$10,000.
