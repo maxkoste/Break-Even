@@ -14,8 +14,17 @@ def hello_world():
 @app.route("/")
 def get_deck():
     url = "https://deckofcardsapi.com/api/deck/new/" 
-    response = response.get(url)
+    response = requests.get(url)
+    data = response.json()
+    print(data)
+    user_id = data['deck_id']
+    print(user_id)
+
+@app.route("/")
+def draw_card():
+    url = "https://deckofcardsapi.com/api/deck/iun3e4moglhs/draw/?count=2"
+    response = requests.get(url)
     data = response.json()
     print(data)
 
-get_deck()
+draw_card()
