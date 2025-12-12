@@ -8,17 +8,20 @@ app = Flask(__name__)
 
 
 @app.route("/")
-def hello_world():
+def main():
     return render_template("index.html")
+
 
 @app.route("/")
 def get_deck():
-    url = "https://deckofcardsapi.com/api/deck/new/" 
+    url = "https://deckofcardsapi.com/api/deck/new/"
     response = requests.get(url)
     data = response.json()
     print(data)
-    user_id = data['deck_id']
+    user_id = data["deck_id"]
     print(user_id)
+    return ""
+
 
 @app.route("/")
 def draw_card():
@@ -26,5 +29,10 @@ def draw_card():
     response = requests.get(url)
     data = response.json()
     print(data)
+    return data
+
 
 draw_card()
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
