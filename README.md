@@ -55,7 +55,8 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 
 - Running the server:
 
-´´´
+```
 flask --app src/app run
-
-´´´
+```
+```
+```
