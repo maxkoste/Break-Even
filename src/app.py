@@ -2,7 +2,7 @@
 # Create endpoints that the frontend can access
 #
 from flask import Flask, render_template
-import requests
+import requests, base64
 
 app = Flask(__name__)
 
@@ -31,6 +31,32 @@ def draw_card():
     print(data)
     return data
 
+@app.route("/api/getmoonphase")
+def get_moonphase():
+    app_id = ""
+    app_secret = ""
+    auth_str = base64.b64encode(f"{app_id}:{app_secret}".encode()).decode()
+
+
+    url = "https://api.astronomyapi.com/api/v2/bodies/positions/moon"
+
+    params = {
+        "latitude": "55.6059",
+        "longitude": "13.0038",
+        "elevation": "10",
+        "from_date": "2025-12-12",
+        "to_date": "2025-12-12",
+        "time": "20:00:00"
+    }
+
+    headers = {
+        "Authorization": f"Basic {auth_str}"
+    }
+
+
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+    print(data["data"]["table"]["rows"][0]["cells"][0]["extraInfo"]["phase"]["string"])
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
