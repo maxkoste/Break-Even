@@ -7,7 +7,7 @@ import logic
 
 app = Flask(__name__)
 
-VALUE_MAP = {
+VALUE_MAP = { #PROBLEMATIC, Cards should always be tracked so that splits etc work correctly.
     "ACE": 11,
     "JACK": 10,
     "QUEEN": 10,
@@ -34,7 +34,7 @@ def get_blackjack_deck():
 
 @app.route("/api/drawcard")
 def draw_card(deck_id):
-    url = "https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=18"
+    url = "https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=324"
     response = requests.get(url)
     data = response.json()
 
@@ -101,7 +101,9 @@ def get_celestial_data():
     print(moon_phase)
 
 #logic.populate_deck(draw_card(get_blackjack_deck()))
-#logic.start_game() 
+#logic.populate_deck([(3, "Diamonds"), (10, "Hearts"), ("JOKER", "BLACK"), (11, "Spades")])
+#logic.start_game()
+#print(logic.use_powerup(0))
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
