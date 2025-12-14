@@ -35,38 +35,11 @@ def draw_card():
     print(data)
     return data
 
-@app.route("/api/getmoonphase")
-def get_moonphase():
+@app.route("/api/getcelestialdata")
+def get_celestial_data():
     app_id = ""
     app_secret = ""
     auth_str = base64.b64encode(f"{app_id}:{app_secret}".encode()).decode()
-
-
-    url = "https://api.astronomyapi.com/api/v2/bodies/positions/moon"
-
-    params = {
-        "latitude": "55.6059",
-        "longitude": "13.0038",
-        "elevation": "10",
-        "from_date": "2025-12-12",
-        "to_date": "2025-12-12",
-        "time": "20:00:00"
-    }
-
-    headers = {
-        "Authorization": f"Basic {auth_str}"
-    }
-
-    response = requests.get(url, headers=headers, params=params)
-    data = response.json()
-    print(data["data"]["table"]["rows"][0]["cells"][0]["extraInfo"]["phase"]["string"])
-
-@app.route("/api/getcelestialdata")
-def get_celestial_data():
-    app_id = "3f6e208a-f3a1-45c7-9e1f-d741f95e9999"
-    app_secret = "c11b3451ef84139fc643554548e504c5fa8661fbdae6d87d69e9b1cac6eaefe4197b90819d3e71bf2454c9fc2e67157e5002c6a2317b74980fb6863c791f6b3558e37854c46a6888769599f32a2881c53d67cc6a1b47c327cc035c23ab02a80607b951b869e10739c4473eb06e3b6acb"
-    auth_str = base64.b64encode(f"{app_id}:{app_secret}".encode()).decode()
-
 
     url = "https://api.astronomyapi.com/api/v2/bodies/positions"
 
