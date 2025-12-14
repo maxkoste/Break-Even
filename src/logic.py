@@ -29,14 +29,16 @@ def start_game(): #Give both players 2 cards. DOES NOT account for Jokers, do in
 def draw_card(hand_index):
     global hands, scores, deck
 
-    card = deck.popleft() # Jokers dissapear if drawn by dealer, bug or feature?
-    hands[hand_index].append(card)
+    card = deck.popleft() # Jokers dissapear if drawn by dealer, add logic to ignore dealer jokers.
 
     value, suit = card
     if value != "JOKER":
         scores[hand_index] += value
     elif hand_index != 0: 
-        powerups.append(random.choice(range(0, 1))) #0-0, Expand to 0-24 for all 24 options
+        powerups.append(random.choice(range(0, 4))) #0-3, Expand to 0-22 for all 21 options
+
+    hands[hand_index].append(card)
+    
     if scores[hand_index] > 21:
         game_over()
 
@@ -63,56 +65,52 @@ def next_turn(win_or_tie): #Payout bet on win, nothing on loss, keep on table if
 def assign_powerups(player_data): #Read celestial data and assign correct powerups
     powerups.append(0)
 
-def use_powerup(powerup_index): # 0-11 Major, 12-24 Minor
+def use_powerup(powerup_index): # 0-10 Major, 10-21 Minor
     powerups.remove(powerup_index)
     match powerup_index:
         case 0: #Sun Major, show hidden dealer card.
             return hands[0][0]
-        case 1: #Moon Major, 
+        case 1: #Moon Major, look at the next card, draw it or the one after.
+            return deck[0], deck[1] #Helper method called after user picks, use deck.rotate
+        case 2: #Mercury Major,
+            next_turn(False) # resets turn 
+        case 3: #Venus Major, increase bet by 1.5x for each heart in hand.
+            return sum(1 for value, suit in hands[1] if suit == "HEARTS") #MAKE INCREASE ACTUAL BET
+        case 4: #Earth Major, split any hand
             pass
-        case 2:
+        case 5: #Mars Major, destroy dealers card
             pass
-        case 3:
+        case 6: #Jupter Major, search next 7 cards, draw the one that gets you closest to 21.
             pass
-        case 4:
+        case 7: #Saturn Major, next time you go over 21, loop back around from 1 and up. 
             pass
-        case 5:
+        case 8: #Uranus Major, randomize all cards both hands.
             pass
-        case 6:
+        case 9: #Neptune Major, search cards until you find one that wont make you bust then draw.
             pass
-        case 7:
+        case 10: #Pluto Major, triple down on any hand.
             pass
-        case 8:
+        case 11: #Sun Minor, show next card.
+            return deck[0]
+        case 12: #Moon Minor, 
             pass
-        case 9:
+        case 13: #Mercury Minor,
             pass
-        case 10:
+        case 14: #Venus Minor,
             pass
-        case 11:
+        case 15: #Earth Minor, 
             pass
-        case 12:
+        case 16: #Mars Minor, 
             pass
-        case 13:
+        case 17: #Jupiter Minor,
             pass
-        case 14:
+        case 18: #Saturn Minor, 
             pass
-        case 15:
+        case 19: #Uranus Minor, 
             pass
-        case 16:
+        case 20: #Neptune Minor, 
             pass
-        case 17:
-            pass
-        case 18:
-            pass
-        case 19:
-            pass
-        case 20:
-            pass
-        case 21:
-            pass
-        case 22:
-            pass
-        case 23:
+        case 21: #Pluto Minor,
             pass
         case _:
             print("Incorrect power-up value")
