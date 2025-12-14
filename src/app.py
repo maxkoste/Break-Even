@@ -6,7 +6,6 @@ import requests, base64
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def main():
     return render_template("index.html")
@@ -16,23 +15,20 @@ def game():
     return render_template("game.html")
 
 
-@app.route("/api/newdeck")
-def get_deck():
-    url = "https://deckofcardsapi.com/api/deck/new/"
+@app.route("/api/newblackjackdeck")
+def get_blackjack_deck():
+    url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
     response = requests.get(url)
     data = response.json()
-    print(data)
-    user_id = data["deck_id"]
-    print(user_id)
-    return data
+    deck_id = data["deck_id"]
+    return deck_id
 
 
 @app.route("/api/drawcard")
-def draw_card():
-    url = "https://deckofcardsapi.com/api/deck/iun3e4moglhs/draw/?count=2"
+def draw_card(deck_id):
+    url = "https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=18"
     response = requests.get(url)
     data = response.json()
-    print(data)
     return data
 
 @app.route("/api/getcelestialdata")
@@ -80,7 +76,8 @@ def get_celestial_data():
 
     print(moon_phase)
 
-get_celestial_data()
+#deck_id = get_blackjack_deck()
+#draw_card(deck_id)
 
 #if __name__ == "__main__":
 #    app.run(debug=True, port=5000)
