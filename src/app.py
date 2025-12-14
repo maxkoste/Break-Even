@@ -3,8 +3,16 @@
 #
 from flask import Flask, render_template
 import requests, base64
+import logic 
 
 app = Flask(__name__)
+
+VALUE_MAP = {
+    "ACE": 11,
+    "JACK": 10,
+    "QUEEN": 10,
+    "KING": 10
+}
 
 @app.route("/")
 def main():
@@ -29,7 +37,23 @@ def draw_card(deck_id):
     url = "https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=18"
     response = requests.get(url)
     data = response.json()
-    return data
+
+    cards = []
+
+    for card in data["cards"]:
+        value = card["value"]
+        suit = card["suit"]
+
+        if value == "JOKER":
+            cards.append(["JOKER", suit])
+        elif value in VALUE_MAP:
+            cards.append([VALUE_MAP[value], suit])
+        else:
+            cards.append([int(value), suit])
+
+    print(cards)
+    return cards
+
 
 @app.route("/api/getcelestialdata")
 def get_celestial_data():
@@ -76,8 +100,8 @@ def get_celestial_data():
 
     print(moon_phase)
 
-#deck_id = get_blackjack_deck()
-#draw_card(deck_id)
+#logic.populate_deck(draw_card(get_blackjack_deck()))
+#logic.start_game() 
 
-#if __name__ == "__main__":
-#    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
