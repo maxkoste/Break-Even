@@ -39,7 +39,8 @@ def draw_card(hand_index):
 
     hands[hand_index].append(card)
     
-    if scores[hand_index] > 21:
+    #NOT >= 21 because we want to give players a chance to use a powerup.
+    if scores[hand_index] > 21: #Maybe this check should be used to turn 11 -> 1 if a player has an ace
         game_over()
 
 def split(): #Place one of player's cards into a new hand.
@@ -65,6 +66,10 @@ def next_turn(win_or_tie): #Payout bet on win, nothing on loss, keep on table if
 def assign_powerups(player_data): #Read celestial data and assign correct powerups
     powerups.append(0)
 
+def draw_card_by_index(index, hand_index):
+    deck.rotate(-index) #index of 0 does nothing, -1 takes next in list, so on
+    draw_card(hand_index) #only used by player
+
 def use_powerup(powerup_index): # 0-10 Major, 10-21 Minor
     powerups.remove(powerup_index)
     match powerup_index:
@@ -79,7 +84,7 @@ def use_powerup(powerup_index): # 0-10 Major, 10-21 Minor
         case 4: #Earth Major, split any hand
             pass
         case 5: #Mars Major, destroy dealers card
-            pass
+            hands[0][1] = None
         case 6: #Jupter Major, search next 7 cards, draw the one that gets you closest to 21.
             pass
         case 7: #Saturn Major, next time you go over 21, loop back around from 1 and up. 
