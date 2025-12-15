@@ -6,6 +6,7 @@ import requests, base64
 import logic
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -73,12 +74,14 @@ def get_celestial_data():
 
     url = "https://api.astronomyapi.com/api/v2/bodies/positions"
 
+    today = datetime.now().strftime("%Y-%m-%d")
+
     params = {
         "latitude": "55.6050",
         "longitude": "13.0038",
         "elevation": "12",
-        "from_date": "2025-12-13",
-        "to_date": "2025-12-13",
+        "from_date": today,
+        "to_date": today,
         "time": "10:35:00"
     }
 
