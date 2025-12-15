@@ -9,6 +9,8 @@
 <body>
     <h1>Blackjack Casino</h1>
     <p>Welcome!</p>
+    <p id="demo">Click the button to get location</p>
+    <button onclick="getLocation()">Get location</button>
     <a href="{{ url_for('game') }}">
         <button class="game-button">Start Game</button>
     </a>
