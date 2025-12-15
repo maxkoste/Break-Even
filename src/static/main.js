@@ -38,7 +38,7 @@ function handleError(err) {
 //Link to free elevation api, elevation unlikely to be return correct without
 
 async function getDeck() {
-    let response = await fetch("/api/newblackjackdeck");
+    let response = await fetch("/api/start_blackjack");
     let data = await response.json();
     
     document.getElementById("output").textContent =

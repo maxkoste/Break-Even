@@ -1,7 +1,7 @@
 # TODO: Import neccessary utilities and make the API calls to handle the shuffling of cards.
 # Create endpoints that the frontend can access
 #
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 import requests, base64
 import logic
 import os
@@ -26,19 +26,25 @@ def main():
 def game():
     return render_template("game.html")
 
+@app.route("/api/start_blackjack")
+def start_blackjack():
+    deck_id = new_blackjack_deck()
+    cards = draw_cards(deck_id, 324)
+    logic.populate_deck(cards)
+    initial_hands = logic.start_game()
 
-@app.route("/api/newblackjackdeck")
-def get_blackjack_deck():
+    return jsonify(initial_hands)
+
+def new_blackjack_deck():
     url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
     response = requests.get(url)
     data = response.json()
     deck_id = data["deck_id"]
     return deck_id
 
+def draw_cards(deck_id, count):
+    url = f"https://deckofcardsapi.com/api/deck/{deck_id}/draw/?count={count}"
 
-@app.route("/api/drawcard")
-def draw_card(deck_id):
-    url = "https://deckofcardsapi.com/api/deck/" + deck_id + "/draw/?count=324"
     response = requests.get(url)
     data = response.json()
 
@@ -55,7 +61,6 @@ def draw_card(deck_id):
         else:
             cards.append([int(value), suit])
 
-    print(cards)
     return cards
 
 
