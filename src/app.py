@@ -75,6 +75,7 @@ def get_celestial_data():
     url = "https://api.astronomyapi.com/api/v2/bodies/positions"
 
     today = datetime.now().strftime("%Y-%m-%d")
+    current_time = datetime.now().strftime("H%:M%:%S")
 
     params = {
         "latitude": "55.6050",
@@ -82,7 +83,7 @@ def get_celestial_data():
         "elevation": "12",
         "from_date": today,
         "to_date": today,
-        "time": "10:35:00"
+        "time": current_time
     }
 
     headers = {
