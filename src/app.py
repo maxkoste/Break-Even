@@ -112,6 +112,7 @@ def get_celestial_data():
         print(constellation)
 
     print(moon_phase)
+    return results
 
 #logic.populate_deck(draw_card(get_blackjack_deck()))
 #logic.populate_deck([(3, "Diamonds"), (10, "Hearts"), ("JOKER", "BLACK"), (11, "Spades")])
