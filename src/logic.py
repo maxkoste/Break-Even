@@ -22,9 +22,11 @@ def start_game(): #Give both players 2 cards. DOES NOT account for Jokers, do in
     draw_card(0)
     draw_card(1)
     draw_card(1)
-    print("Hands after initial deal:")
-    for i, hand in enumerate(hands):
-        print(f"Hand {i}: {hand}, Score: {scores[i]}")
+
+    return {
+        "player": hands[1],
+        "dealer": hands[0]
+    }
 
 def draw_card(hand_index):
     global hands, scores, deck
