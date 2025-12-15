@@ -18,10 +18,18 @@ def populate_deck(cards): #Take formatted data from the API call and place the c
     deck = deque(cards)
 
 def start_game(): #Give both players 2 cards. DOES NOT account for Jokers, do in loop until 2 cards
-    draw_card(0)
-    draw_card(0)
-    draw_card(1)
-    draw_card(1)
+    cards_dealt = 0
+    
+    while cards_dealt < 4:
+        hand_index = 0 if cards_dealt % 2 == 0 else 1   #alternera mellan dealer (0) och spelare (1)
+
+        next_card = deck[0]  #kolla nästa kort
+        if next_card[0] == "JOKER":
+            deck.rotate(-1)  #flytta jokern till slutet
+            continue
+        
+        draw_card(hand_index)
+        cards_dealt += 1
 
     return {
         "player": hands[1],
@@ -43,7 +51,9 @@ def draw_card(hand_index):
     
     #NOT >= 21 because we want to give players a chance to use a powerup.
     if scores[hand_index] > 21: #Maybe this check should be used to turn 11 -> 1 if a player has an ace
-        game_over()
+        return True
+
+    return False
 
 def split(): #Place one of player's cards into a new hand.
     pass
@@ -55,7 +65,24 @@ def insure(): #Some weird stuff I dunno
     pass
 
 def dealer_turn(): #Algorithm for playing. Generally hit until 17 is reached, then stand.
-    pass
+    while scores[0] < 17 and scores[0] <= 21:
+        draw_card(0) 
+    
+    player_score = scores[1]
+    dealer_score = scores[0]
+    
+    if dealer_score > 21:
+        winner = "Player wins! Dealer busted"
+    elif player_score > 21:
+        winner = "Dealer wins! Player busted"
+    elif player_score > dealer_score:
+        winner = "Player wins!"
+    elif dealer_score > player_score:
+        winner = "Dealer wins!"
+    else:
+        winner = "It's a tie!"
+
+    return winner
 
 def game_over(): #Compare decks, if 1 over 21 other is the winner, otherwise highest wins. Return
     # winner or tie. Next turn.
@@ -63,7 +90,10 @@ def game_over(): #Compare decks, if 1 over 21 other is the winner, otherwise hig
 
 def next_turn(win_or_tie): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
     # except joker maybe?
-    pass
+    global hands, scores, powerups
+    
+    hands = [[], []]
+    scores = [0, 0]
 
 def assign_powerups(player_data): #Read celestial data and assign correct powerups
     powerups.append(0)

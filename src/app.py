@@ -118,5 +118,44 @@ def get_celestial_data():
 #logic.start_game()
 #print(logic.use_powerup(0))
 
+@app.route("/api/hit")
+def hit():
+    busted = logic.draw_card(1) 
+    
+    if busted:  
+        result = {
+            "player": logic.hands[1].copy(),
+            "dealer": logic.hands[0].copy(),
+            "player_score": logic.scores[1],
+            "dealer_score": logic.scores[0],
+            "winner": "Dealer wins! Player busted",
+            "game_over": True 
+        }
+        logic.next_turn(None)
+        return jsonify(result)
+    
+    return jsonify({
+        "player": logic.hands[1],
+        "dealer": logic.hands[0],
+        "player_score": logic.scores[1],
+        "dealer_score": logic.scores[0],
+        "game_over": False 
+    })
+
+@app.route("/api/stand")
+def stand():
+    winner = logic.dealer_turn() 
+    result = {
+        "player": logic.hands[1],
+        "dealer": logic.hands[0],
+        "player_score": logic.scores[1],
+        "dealer_score": logic.scores[0],
+        "winner": winner
+    }
+
+    logic.next_turn(winner)
+
+    return jsonify(result)
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

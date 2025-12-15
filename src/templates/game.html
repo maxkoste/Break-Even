@@ -9,7 +9,12 @@
 <body>
     <h1>Welcome to the table</h1>
     <p>Good luck!</p>
-    <button class="deck-button" onclick="getDeck()">New Deck</button>
+    <button id="startBtn" class="deck-button" onclick="startGame()">Start Game</button>
+    
+    <div id="gameButtons" style="display: none;">
+        <button class="deck-button" onclick="hit()">Hit</button>
+        <button class="deck-button" onclick="stand()">Stand</button>
+    </div>
     <pre id="output"></pre>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
