@@ -3,7 +3,11 @@
 #
 from flask import Flask, render_template
 import requests, base64
-import logic 
+import logic
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -57,8 +61,9 @@ def draw_card(deck_id):
 
 @app.route("/api/getcelestialdata")
 def get_celestial_data():
-    app_id = ""
-    app_secret = ""
+    app_id = os.getenv("ASTRONOMY_APP_ID")
+    app_secret = os.getenv("ASTRONOMY_APP_SECRET")
+    
     auth_str = base64.b64encode(f"{app_id}:{app_secret}".encode()).decode()
 
     url = "https://api.astronomyapi.com/api/v2/bodies/positions"
