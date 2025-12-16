@@ -125,36 +125,19 @@ def hit():
     busted = logic.draw_card(1) 
     
     if busted:  
-        result = {
-            "player": logic.hands[1].copy(),
-            "dealer": logic.hands[0].copy(),
-            "player_score": logic.scores[1],
-            "dealer_score": logic.scores[0],
-            "winner": "Dealer wins! Player busted",
-            "game_over": True 
-        }
-        logic.next_turn(None)
+        winner = logic.game_over()
+        result = logic.game_state(winner, game_over=True)
+        logic.next_turn(winner)
+
         return jsonify(result)
     
-    return jsonify({
-        "player": logic.hands[1],
-        "dealer": logic.hands[0],
-        "player_score": logic.scores[1],
-        "dealer_score": logic.scores[0],
-        "game_over": False 
-    })
+    return jsonify(logic.game_state())
 
 @app.route("/api/stand")
 def stand():
-    winner = logic.dealer_turn() 
-    result = {
-        "player": logic.hands[1],
-        "dealer": logic.hands[0],
-        "player_score": logic.scores[1],
-        "dealer_score": logic.scores[0],
-        "winner": winner
-    }
-
+    logic.dealer_turn() 
+    winner = logic.game_over()
+    result = logic.game_state(winner, game_over=True)
     logic.next_turn(winner)
 
     return jsonify(result)

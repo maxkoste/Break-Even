@@ -17,20 +17,12 @@ def populate_deck(cards): #Take formatted data from the API call and place the c
     global deck
     deck = deque(cards)
 
-def start_game(): #Give both players 2 cards. DOES NOT account for Jokers, do in loop until 2 cards
-    cards_dealt = 0
+def start_game(): #Give both players 2 cards.
+    draw_card(0)
+    draw_card(0)
+    draw_card(1)
+    draw_card(1)    
     
-    while cards_dealt < 4:
-        hand_index = 0 if cards_dealt % 2 == 0 else 1   #alternera mellan dealer (0) och spelare (1)
-
-        next_card = deck[0]  #kolla nästa kort
-        if next_card[0] == "JOKER":
-            deck.rotate(-1)  #flytta jokern till slutet
-            continue
-        
-        draw_card(hand_index)
-        cards_dealt += 1
-
     return {
         "player": hands[1],
         "dealer": hands[0]
@@ -39,7 +31,11 @@ def start_game(): #Give both players 2 cards. DOES NOT account for Jokers, do in
 def draw_card(hand_index):
     global hands, scores, deck
 
-    card = deck.popleft() # Jokers dissapear if drawn by dealer, add logic to ignore dealer jokers.
+    if hand_index == 0:
+        while deck[0] == "JOKER":
+            deck.rotate(1)
+    
+    card = deck.popleft()
 
     value, suit = card
     if value != "JOKER":
@@ -52,7 +48,6 @@ def draw_card(hand_index):
     #NOT >= 21 because we want to give players a chance to use a powerup.
     if scores[hand_index] > 21: #Maybe this check should be used to turn 11 -> 1 if a player has an ace
         return True
-
     return False
 
 def split(): #Place one of player's cards into a new hand.
@@ -65,9 +60,11 @@ def insure(): #Some weird stuff I dunno
     pass
 
 def dealer_turn(): #Algorithm for playing. Generally hit until 17 is reached, then stand.
-    while scores[0] < 17 and scores[0] <= 21:
-        draw_card(0) 
-    
+    while scores[0] < 17:
+        draw_card(0)
+
+def game_over(): #Compare decks, if 1 over 21 other is the winner, otherwise highest wins. Return
+    # winner or tie. Next turn.
     player_score = scores[1]
     dealer_score = scores[0]
     
@@ -84,13 +81,19 @@ def dealer_turn(): #Algorithm for playing. Generally hit until 17 is reached, th
 
     return winner
 
-def game_over(): #Compare decks, if 1 over 21 other is the winner, otherwise highest wins. Return
-    # winner or tie. Next turn.
-    print("game over")
+def game_state(winner=None, game_over=False):
+    return {
+        "player": hands[1],
+        "dealer": hands[0],
+        "player_score": scores[1],
+        "dealer_score": scores[0],
+        "winner": winner,
+        "game_over": game_over
+    }
 
-def next_turn(win_or_tie): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
+def next_turn(winner): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
     # except joker maybe?
-    global hands, scores, powerups
+    global hands, scores
     
     hands = [[], []]
     scores = [0, 0]
