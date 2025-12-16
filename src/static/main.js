@@ -37,10 +37,39 @@ function handleError(err) {
 //https://api.opentopodata.org/v1/srtm90m?locations=LAT,LON
 //Link to free elevation api, elevation unlikely to be return correct without
 
-async function getDeck() {
+async function startGame() {
     let response = await fetch("/api/start_blackjack");
     let data = await response.json();
     
     document.getElementById("output").textContent =
         JSON.stringify(data, null, 2);
+
+    document.getElementById("startBtn").style.display = "none"; 
+    document.getElementById("gameButtons").style.display = "block"; 
+}
+
+async function hit() {
+    let response = await fetch("/api/hit");
+    let data = await response.json();
+    
+    document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+
+    if (data.game_over) {
+        document.getElementById("gameButtons").style.display = "none";
+        document.getElementById("startBtn").style.display = "block";
+        document.getElementById("startBtn").textContent = "New Round";
+    }
+}
+
+async function stand() {
+    let response = await fetch("/api/stand");
+    let data = await response.json();
+    
+    document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+
+    document.getElementById("gameButtons").style.display = "none"; 
+    document.getElementById("startBtn").style.display = "block"; 
+    document.getElementById("startBtn").textContent = "New Round";
 }
