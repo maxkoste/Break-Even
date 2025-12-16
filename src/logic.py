@@ -32,7 +32,8 @@ def draw_card(hand_index):
     global hands, scores, deck
 
     if hand_index == 0:
-        while deck[0] == "JOKER":
+        while deck[0][0] == "JOKER":
+            print("JOKER DETECTED, OBLITERATE")
             deck.rotate(1)
     
     card = deck.popleft()
