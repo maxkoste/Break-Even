@@ -48,6 +48,17 @@ async function startGame() {
     document.getElementById("gameButtons").style.display = "block"; 
 }
 
+async function newRound() {
+    let response = await fetch("/new_round");
+    let data = await response.json();
+
+    document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("gameButtons").style.display = "block";
+}
+
 async function hit() {
     let response = await fetch("/api/hit");
     let data = await response.json();
@@ -57,8 +68,10 @@ async function hit() {
 
     if (data.game_over) {
         document.getElementById("gameButtons").style.display = "none";
-        document.getElementById("startBtn").style.display = "block";
-        document.getElementById("startBtn").textContent = "New Round";
+        const startBtn = document.getElementById("startBtn");
+        startBtn.style.display = "block";
+        startBtn.textContent = "New Round";
+        startBtn.onclick = newRound;
     }
 }
 
@@ -69,7 +82,11 @@ async function stand() {
     document.getElementById("output").textContent =
         JSON.stringify(data, null, 2);
 
-    document.getElementById("gameButtons").style.display = "none"; 
-    document.getElementById("startBtn").style.display = "block"; 
-    document.getElementById("startBtn").textContent = "New Round";
+    if (data.game_over) {
+        document.getElementById("gameButtons").style.display = "none";
+        const startBtn = document.getElementById("startBtn");
+        startBtn.style.display = "block";
+        startBtn.textContent = "New Round";
+        startBtn.onclick = newRound;
+    }
 }

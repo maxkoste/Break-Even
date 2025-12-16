@@ -32,9 +32,12 @@ def start_blackjack():
     deck_id = new_blackjack_deck()
     cards = draw_cards(deck_id, 324)
     logic.populate_deck(cards)
-    initial_hands = logic.start_game()
 
-    return jsonify(initial_hands)
+    return jsonify(logic.start_game())
+
+@app.route("/new_round")
+def new_round():
+    return jsonify(logic.start_game())
 
 def new_blackjack_deck():
     url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
