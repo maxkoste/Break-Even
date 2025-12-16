@@ -51,13 +51,45 @@ def draw_card(hand_index):
         return True
     return False
 
+def bet(amount, hand_index=1):
+    global chips
+
+    # Ensure the bet is positive
+    if amount <= 0:
+        return "Bet must be greater than 0."
+    
+    # Ensure the player has enough chips
+    if chips < amount:
+        return "Not enough chips to place this bet."
+
+    # Deduct the bet from the player's total chips
+    chips -= amount
+
+    # Store the bet in the hand (as the last element in the hand)
+    if len(hands[hand_index]) == 0:
+        hands[hand_index].append(("BET", amount))
+    else:
+        hands[hand_index].append(("BET", amount))
+
+    return f"Bet of {amount} placed on hand {hand_index}."
+
 def split(): #Place one of player's cards into a new hand.
     pass
 
-def double_down(): #Double the bet.
-    pass
+def double_down(bet_amount, hand_index=0):
+    # Use the bet() function to place the extra bet
+    bet_result = bet(bet_amount, hand_index)
+    if "Not enough chips" in bet_result:
+        return bet_result
 
-def insure(): #Some weird stuff I dunno
+    # Draw exactly one card for the hand
+    draw_card(hand_index)
+
+    # After double down, the player's turn for this hand ends
+    return f"Double down! Bet increased by {bet_amount} on hand {hand_index}, one card drawn."
+
+
+def insurance(): #Place an insurance if dealers first card is an Ace
     pass
 
 def dealer_turn(): #Algorithm for playing. Generally hit until 17 is reached, then stand.
