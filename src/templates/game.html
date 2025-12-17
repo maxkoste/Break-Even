@@ -3,19 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game - Flask Starter</title>
+    <title>Blackjack Table</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Welcome to the table</h1>
-    <p>Good luck!</p>
-    <button id="startBtn" class="deck-button" onclick="startGame()">Start Game</button>
-    
-    <div id="gameButtons" style="display: none;">
+    <header>
+        <h1>Welcome to the Table</h1>
+        <p>Good luck!</p>
+    </header>
+
+    <!-- Betting Section -->
+    <section id="bettingSection">
+        <div id="betting">
+            <label for="betSelect">Bet:</label>
+            <select id="betSelect"></select>
+        </div>
+        <button id="startBtn" class="deck-button" onclick="startGame()">Start Game</button>
+    </section>
+
+    <!-- Player Info -->
+    <section id="playerInfo">
+        <p>Chips: <span id="chipsDisplay">200</span></p>
+        <p>Current bet: <span id="currentBetDisplay">0</span></p>
+    </section>
+
+    <!-- Game Control Buttons -->
+    <section id="controls" style="display: none;">
         <button class="deck-button" onclick="hit()">Hit</button>
         <button class="deck-button" onclick="stand()">Stand</button>
-    </div>
-    <pre id="output"></pre>
+    </section>
+
+
+    <!-- Game Output / Debug Info -->
+    <section id="gameOutput">
+        <pre id="output"></pre>
+    </section>
+
+    <!-- Scripts -->
     <script src="{{ url_for('static', filename='main.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            populateBetDropdown();
+        });
+    </script>
 </body>
 </html>
