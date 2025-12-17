@@ -1,4 +1,12 @@
 const x = document.getElementById("demo");
+let chips = 200;
+let betStep = 50;
+let currentBet = 0;
+
+window.addEventListener("DOMContentLoaded", () => {
+    populateBetDropdown();
+    updateBankUI();
+});
 
 function getLocation() {
   if (!navigator.geolocation) {
@@ -37,56 +45,126 @@ function handleError(err) {
 //https://api.opentopodata.org/v1/srtm90m?locations=LAT,LON
 //Link to free elevation api, elevation unlikely to be return correct without
 
-async function startGame() {
-    let response = await fetch("/api/start_blackjack");
-    let data = await response.json();
-    
+function updateBankUI() {
+    document.getElementById("chipsDisplay").textContent = chips;
+    document.getElementById("currentBetDisplay").textContent = currentBet;
+}
+
+function populateBetDropdown(selectedBet = null) {
+    const select = document.getElementById("betSelect");
+    select.innerHTML = "";
+
+    if (chips < betStep) {
+        select.disabled = true;
+        return;
+    }
+    select.disabled = false;
+
+    for (let bet = betStep; bet <= chips; bet += betStep) {
+        const option = document.createElement("option");
+        option.value = bet;
+        option.textContent = bet;
+        select.appendChild(option);
+    }
+
+    if (selectedBet !== null && select.querySelector(`option[value="${selectedBet}"]`)) {
+        select.value = selectedBet;
+    } else if (select.options.length > 0) {
+        select.value = select.options[0].value;
+    }
+}
+
+async function callGameApi(url, options = {}) {
+    const response = await fetch(url, options);
+    return await response.json();
+}
+
+function handleGameState(data, resetDropdown = true) {
     document.getElementById("output").textContent =
         JSON.stringify(data, null, 2);
 
-    document.getElementById("startBtn").style.display = "none"; 
-    document.getElementById("gameButtons").style.display = "block"; 
+    if (typeof data.chips === "number") {
+        chips = data.chips;
+    }
+
+    if (typeof data.current_bet === "number") {
+        currentBet = data.current_bet;
+    }
+
+    if (resetDropdown) {
+        populateBetDropdown(currentBet);
+    }
+
+    updateBankUI();
+
+    if (data.game_over) {
+        endRoundUI();
+    } else {
+        inRoundUI();
+    }
+}
+
+function inRoundUI() {
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("controls").style.display = "block";
+    document.getElementById("betting").style.display = "none";
+}
+
+function endRoundUI() {
+    document.getElementById("controls").style.display = "none";
+
+    const startBtn = document.getElementById("startBtn");
+    startBtn.style.display = "block";
+    startBtn.textContent = "New Round";
+    startBtn.onclick = newRound;
+
+    document.getElementById("betting").style.display = "block";
+    currentBet = 0;
+    updateBankUI();
+}
+
+async function startGame() {
+    const bet = parseInt(document.getElementById("betSelect").value, 10);
+    currentBet = bet;
+
+    const data = await callGameApi("/api/start_blackjack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bet })
+    });
+
+    if (typeof data.chips === "number") {
+        chips = data.chips;
+    }
+
+    currentBet = bet;
+    handleGameState(data, false);
 }
 
 async function newRound() {
-    let response = await fetch("/new_round");
-    let data = await response.json();
+    const bet = parseInt(document.getElementById("betSelect").value, 10);
+    currentBet = bet;
 
-    document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
+    const data = await callGameApi("/new_round", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bet })
+    });
 
-    document.getElementById("startBtn").style.display = "none";
-    document.getElementById("gameButtons").style.display = "block";
+    if (typeof data.chips === "number") {
+        chips = data.chips;
+    }
+
+    currentBet = bet;
+    handleGameState(data, false);
 }
 
 async function hit() {
-    let response = await fetch("/api/hit");
-    let data = await response.json();
-    
-    document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
-
-    if (data.game_over) {
-        document.getElementById("gameButtons").style.display = "none";
-        const startBtn = document.getElementById("startBtn");
-        startBtn.style.display = "block";
-        startBtn.textContent = "New Round";
-        startBtn.onclick = newRound;
-    }
+    const data = await callGameApi("/api/hit");
+    handleGameState(data);
 }
 
 async function stand() {
-    let response = await fetch("/api/stand");
-    let data = await response.json();
-    
-    document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
-
-    if (data.game_over) {
-        document.getElementById("gameButtons").style.display = "none";
-        const startBtn = document.getElementById("startBtn");
-        startBtn.style.display = "block";
-        startBtn.textContent = "New Round";
-        startBtn.onclick = newRound;
-    }
+    const data = await callGameApi("/api/stand");
+    handleGameState(data);
 }

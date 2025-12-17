@@ -23,10 +23,7 @@ def start_game(): #Give both players 2 cards.
     draw_card(1)
     draw_card(1)    
     
-    return {
-        "player": hands[1],
-        "dealer": hands[0]
-    }
+    return game_state()
 
 def draw_card(hand_index):
     global hands, scores, deck
@@ -65,12 +62,11 @@ def bet(amount, hand_index=1):
     # Deduct the bet from the player's total chips
     chips -= amount
 
-    # Store the bet in the hand (as the last element in the hand)
-    if len(hands[hand_index]) == 0:
-        hands[hand_index].append(("BET", amount))
-    else:
-        hands[hand_index].append(("BET", amount))
+    # Store the bet in the hand (as the first element in the hand)
+    hands[hand_index].append((amount, "BET"))
 
+    print(amount, chips)
+    
     return f"Bet of {amount} placed on hand {hand_index}."
 
 def split(): #Place one of player's cards into a new hand.
@@ -121,7 +117,8 @@ def game_state(winner=None, game_over=False):
         "player_score": scores[1],
         "dealer_score": scores[0],
         "winner": winner,
-        "game_over": game_over
+        "game_over": game_over,
+        "chips": chips
     }
 
 def next_turn(winner): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
