@@ -42,10 +42,21 @@ def draw_card(hand_index):
         powerups.append(random.choice(range(0, 4))) #0-3, Expand to 0-22 for all 21 options
 
     hands[hand_index].append(card)
-    
-    #NOT >= 21 because we want to give players a chance to use a powerup.
-    if scores[hand_index] > 21: #Maybe this check should be used to turn 11 -> 1 if a player has an ace
-        return True
+
+    #check if over 21
+    if scores[hand_index] > 21:
+        for i, card in enumerate(hands[hand_index]):
+            if card[0] == 11: #ace found
+                hands[hand_index][i] = (1, card[1]) #change ace from 11 to 1
+                scores[hand_index] -= 10
+                print(f"Ace converted to 1! New score: {scores[hand_index]}")
+                break
+
+        #check again if over 21
+        #NOT >= 21 because we want to give players a chance to use a powerup.
+        if scores[hand_index] > 21: 
+            return True
+
     return False
 
 def bet(amount, hand_index=1):
@@ -123,7 +134,23 @@ def game_state(winner=None, game_over=False):
 
 def next_turn(winner): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
     # except joker maybe?
-    global hands, scores
+    global hands, scores, chips
+
+    #find bet amount
+    bet_amount = 0
+    for card in hands[1]:
+        if isinstance(card, tuple) and len(card) == 2 and card[1] == "BET":
+            bet_amount = card[0]
+            break
+
+    if "Player wins" in winner:
+        chips += bet_amount * 2 #get back bet + win
+        print(f"You won! +{bet_amount * 2} chips")
+    elif "It's a tie" in winner:
+        chips += bet_amount #get back bet only
+        print(f"It's a tie! Bet of {bet_amount} chips returned.")
+    else:
+        print(f"You lost! Lost {bet_amount}, total chips: {chips}")
     
     hands = [[], []]
     scores = [0, 0]
