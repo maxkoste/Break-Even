@@ -105,18 +105,28 @@ def dealer_turn(): #Algorithm for playing. Generally hit until 17 is reached, th
 
 def game_over(): #Compare decks, if 1 over 21 other is the winner, otherwise highest wins. Return
     # winner or tie. Next turn.
+    global chips
     player_score = scores[1]
     dealer_score = scores[0]
+
+    bet_amount = 0
+    for card in hands[1]:
+        if isinstance(card, tuple) and len(card) == 2 and card[1] == "BET":
+            bet_amount = card[0]
+            break
     
     if dealer_score > 21:
+        chips += bet_amount * 2
         winner = "Player wins! Dealer busted"
     elif player_score > 21:
         winner = "Dealer wins! Player busted"
     elif player_score > dealer_score:
+        chips += bet_amount * 2
         winner = "Player wins!"
     elif dealer_score > player_score:
         winner = "Dealer wins!"
     else:
+        chips += bet_amount
         winner = "It's a tie!"
 
     return winner
@@ -134,23 +144,7 @@ def game_state(winner=None, game_over=False):
 
 def next_turn(winner): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
     # except joker maybe?
-    global hands, scores, chips
-
-    #find bet amount
-    bet_amount = 0
-    for card in hands[1]:
-        if isinstance(card, tuple) and len(card) == 2 and card[1] == "BET":
-            bet_amount = card[0]
-            break
-
-    if "Player wins" in winner:
-        chips += bet_amount * 2 #get back bet + win
-        print(f"You won! +{bet_amount * 2} chips")
-    elif "It's a tie" in winner:
-        chips += bet_amount #get back bet only
-        print(f"It's a tie! Bet of {bet_amount} chips returned.")
-    else:
-        print(f"You lost! Lost {bet_amount}, total chips: {chips}")
+    global hands, scores
     
     hands = [[], []]
     scores = [0, 0]
