@@ -27,31 +27,28 @@ def main():
 def game():
     return render_template("game.html")
 
-@app.route("/api/start_blackjack", methods=["POST"])
-def start_blackjack():
+@app.route("/api/state") #This route should not exist. Proper initial load method preferred.
+def state():
+    return jsonify(logic.game_state())
+
+@app.route("/api/deal", methods=["POST"])
+def deal():
     data = request.get_json()
     bet = data.get("bet")
 
     if not isinstance(bet, int) or bet <= 0:
         return jsonify({"error": "Invalid bet"}), 400
+    
+    if (logic.game_started):
+        logic.bet(bet)
+        return jsonify(logic.start_game())
+    else:
+        deck_id = new_blackjack_deck()
+        cards = draw_cards(deck_id, 324)
+        logic.bet(bet)
+        logic.populate_deck(cards)
 
-    deck_id = new_blackjack_deck()
-    cards = draw_cards(deck_id, 324)
-    logic.bet(bet)
-    logic.populate_deck(cards)
-
-    return jsonify(logic.start_game())
-
-@app.route("/new_round", methods=["POST"])
-def new_round():
-    data = request.get_json()
-    bet = data.get("bet")
-
-    if not isinstance(bet, int) or bet <= 0:
-        return jsonify({"error": "Invalid bet"}), 400
-
-    logic.bet(bet)
-    return jsonify(logic.start_game())
+        return jsonify(logic.start_game())
 
 def new_blackjack_deck():
     url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
@@ -81,7 +78,6 @@ def draw_cards(deck_id, count):
 
     return cards
 
-
 @app.route("/api/getcelestialdata")
 def get_celestial_data():
     app_id = os.getenv("ASTRONOMY_APP_ID")
@@ -108,7 +104,6 @@ def get_celestial_data():
         "Authorization": f"Basic {auth_str}"
     }
 
-
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
 
@@ -133,11 +128,6 @@ def get_celestial_data():
     print(moon_phase)
     return results
 
-#logic.populate_deck(draw_card(get_blackjack_deck()))
-#logic.populate_deck([(3, "Diamonds"), (10, "Hearts"), ("JOKER", "BLACK"), (11, "Spades")])
-#logic.start_game()
-#print(logic.use_powerup(0))
-
 @app.route("/api/hit")
 def hit():
     busted = logic.draw_card(1) 
@@ -151,14 +141,6 @@ def hit():
     
     return jsonify(logic.game_state())
 
-@app.route("/api/use_powerup", methods=["POST"])
-def use_powerup():
-    data = request.get_json()
-    powerup = data.get("num")
-    logic.use_powerup(powerup)
-    
-    return jsonify(logic.game_state())
-
 @app.route("/api/stand")
 def stand():
     logic.dealer_turn() 
@@ -167,6 +149,14 @@ def stand():
     logic.next_turn(winner)
 
     return jsonify(result)
+
+@app.route("/api/use_powerup", methods=["POST"])
+def use_powerup():
+    data = request.get_json()
+    powerup = data.get("num")
+    logic.use_powerup(powerup)
+    
+    return jsonify(logic.game_state())
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

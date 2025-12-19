@@ -1,7 +1,5 @@
 const x = document.getElementById("demo");
-let chips = 200;
-let betStep = 50;
-let currentBet = 0;
+const betStep = 50;
 
 function getLocation() {
   if (!navigator.geolocation) {
@@ -40,12 +38,19 @@ function handleError(err) {
 //https://api.opentopodata.org/v1/srtm90m?locations=LAT,LON
 //Link to free elevation api, elevation unlikely to be return correct without
 
-function updateBankUI() {
+function updateBankUI(chips, bet) {
     document.getElementById("chipsDisplay").textContent = chips;
-    document.getElementById("currentBetDisplay").textContent = currentBet;
+    document.getElementById("currentBetDisplay").textContent = bet;
 }
 
-function populateBetDropdown(selectedBet = null) {
+function extractBet(playerHand) {
+    if (!Array.isArray(playerHand) || playerHand.length === 0) {
+        return 0;
+    }
+    return playerHand[0];
+}
+
+function populateBetDropdown(chips, selectedBet = null) {
     const select = document.getElementById("betSelect");
     select.innerHTML = "";
 
@@ -80,21 +85,18 @@ function handleGameState(data, resetDropdown = true) {
 
     populateModalButtonsFromArray(data.powerups);
 
-    if (typeof data.chips === "number") {
-        chips = data.chips;
-    }
-
-    if (typeof data.current_bet === "number") {
-        currentBet = data.current_bet;
-    }
+    const chips = data.chips;
+    const bet = extractBet(data.player);
 
     if (resetDropdown) {
-        populateBetDropdown(currentBet);
+        populateBetDropdown(chips, bet);
     }
 
-    updateBankUI();
+    updateBankUI(chips, bet);
 
-    if (data.game_over) {
+    if (!data.game_started) {
+        return // We should use a better flag system than this for different game states.
+    } else if (data.game_over) {
         endRoundUI();
     } else {
         inRoundUI();
@@ -113,48 +115,24 @@ function endRoundUI() {
     const startBtn = document.getElementById("startBtn");
     startBtn.style.display = "block";
     startBtn.textContent = "New Round";
-    startBtn.onclick = newRound;
+    startBtn.onclick = startGame;
 
     document.getElementById("betting").style.display = "block";
-    currentBet = 0;
-    updateBankUI();
 }
+
 
 async function startGame() {
     const bet = parseInt(document.getElementById("betSelect").value, 10);
-    currentBet = bet;
 
-    const data = await callGameApi("/api/start_blackjack", {
+    const data = await callGameApi("/api/deal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bet })
     });
 
-    if (typeof data.chips === "number") {
-        chips = data.chips;
-    }
-
-    currentBet = bet;
     handleGameState(data, false);
 }
 
-async function newRound() {
-    const bet = parseInt(document.getElementById("betSelect").value, 10);
-    currentBet = bet;
-
-    const data = await callGameApi("/new_round", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bet })
-    });
-
-    if (typeof data.chips === "number") {
-        chips = data.chips;
-    }
-
-    currentBet = bet;
-    handleGameState(data, false);
-}
 
 async function hit() {
     const data = await callGameApi("/api/hit");

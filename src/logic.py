@@ -13,12 +13,16 @@ hands = [[], []]
 scores = [0, 0] 
 powerups = [0, 5, 5]
 powerup_info = None
+game_started = False
 
 def populate_deck(cards): #Take formatted data from the API call and place the cards inside the deck.
     global deck
     deck = deque(cards)
 
 def start_game(): #Give both players 2 cards.
+    global game_started
+    game_started = True
+
     draw_card(0)
     draw_card(0)
     draw_card(1)
@@ -138,11 +142,12 @@ def game_state(winner=None, game_over=False):
         "dealer": hands[0],
         "player_score": scores[1],
         "dealer_score": scores[0],
-        "winner": winner,
-        "game_over": game_over,
         "chips": chips,
         "powerups": powerups,
-        "powerup_info": powerup_info
+        "powerup_info": powerup_info,
+        "game_started": game_started,
+        "game_over": game_over,
+        "winner": winner
     }
 
 def next_turn(winner): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
