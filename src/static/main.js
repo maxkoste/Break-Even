@@ -3,11 +3,6 @@ let chips = 200;
 let betStep = 50;
 let currentBet = 0;
 
-window.addEventListener("DOMContentLoaded", () => {
-    populateBetDropdown();
-    updateBankUI();
-});
-
 function getLocation() {
   if (!navigator.geolocation) {
     x.textContent = "Geolocation is not supported by this browser.";
@@ -82,6 +77,8 @@ async function callGameApi(url, options = {}) {
 function handleGameState(data, resetDropdown = true) {
     document.getElementById("output").textContent =
         JSON.stringify(data, null, 2);
+
+    populateModalButtonsFromArray(data.powerups);
 
     if (typeof data.chips === "number") {
         chips = data.chips;
@@ -166,5 +163,35 @@ async function hit() {
 
 async function stand() {
     const data = await callGameApi("/api/stand");
+    handleGameState(data);
+}
+
+function populateModalButtonsFromArray(numbers) {
+    const container = document.getElementById("modalButtons");
+    container.innerHTML = "";
+
+    // Remove duplicates
+    const uniqueNumbers = [...new Set(numbers)];
+
+    uniqueNumbers.forEach(num => {
+        const btn = document.createElement("button");
+
+        btn.className = "btn btn-primary m-1";
+        btn.textContent = num;
+
+        btn.onclick = () => {
+            usePowerUp(num)
+        };
+
+        container.appendChild(btn);
+    });
+}
+
+async function usePowerUp(num) {
+    const data = await callGameApi("/api/use_powerup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ num })
+    });
     handleGameState(data);
 }

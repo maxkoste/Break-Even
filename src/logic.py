@@ -11,7 +11,8 @@ hands = [[], []]
 #A player should have a "turn" for each hand they currently have, excluding joker hand.
 #Maybe that is tracked in JS? 
 scores = [0, 0] 
-powerups = []
+powerups = [0, 5, 5]
+powerup_info = None
 
 def populate_deck(cards): #Take formatted data from the API call and place the cards inside the deck.
     global deck
@@ -139,7 +140,9 @@ def game_state(winner=None, game_over=False):
         "dealer_score": scores[0],
         "winner": winner,
         "game_over": game_over,
-        "chips": chips
+        "chips": chips,
+        "powerups": powerups,
+        "powerup_info": powerup_info
     }
 
 def next_turn(winner): #Payout bet on win, nothing on loss, keep on table if tie. Reset hands
@@ -157,20 +160,25 @@ def draw_card_by_index(index, hand_index):
     draw_card(hand_index) #only used by player
 
 def use_powerup(powerup_index): # 0-10 Major, 10-21 Minor
+    global powerup_info, scores
     powerups.remove(powerup_index)
+
     match powerup_index:
         case 0: #Sun Major, show hidden dealer card.
-            return hands[0][0]
+            powerup_info = hands[0][0]
         case 1: #Moon Major, look at the next card, draw it or the one after.
             return deck[0], deck[1] #Helper method called after user picks, use deck.rotate
         case 2: #Mercury Major,
-            next_turn(False) # resets turn 
+            pass
+            # resets turn 
         case 3: #Venus Major, increase bet by 1.5x for each heart in hand.
             return sum(1 for value, suit in hands[1] if suit == "HEARTS") #MAKE INCREASE ACTUAL BET
         case 4: #Earth Major, split any hand
             pass
         case 5: #Mars Major, destroy dealers card
-            hands[0][1] = None
+            powerup_info = f"Dealers {hands[0][1]} has been obliterated!!!"
+            scores[0] -= hands[0][1][0]
+            del hands[0][1]
         case 6: #Jupter Major, search next 7 cards, draw the one that gets you closest to 21.
             pass
         case 7: #Saturn Major, next time you go over 21, loop back around from 1 and up. 

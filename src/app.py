@@ -92,7 +92,8 @@ def get_celestial_data():
     url = "https://api.astronomyapi.com/api/v2/bodies/positions"
 
     today = datetime.now().strftime("%Y-%m-%d")
-    current_time = datetime.now().strftime("H%:M%:%S")
+    current_time = datetime.now().strftime("%H:%M:%S")
+    print(today, current_time)
 
     params = {
         "latitude": "55.6050",
@@ -147,6 +148,14 @@ def hit():
         logic.next_turn(winner)
 
         return jsonify(result)
+    
+    return jsonify(logic.game_state())
+
+@app.route("/api/use_powerup", methods=["POST"])
+def use_powerup():
+    data = request.get_json()
+    powerup = data.get("num")
+    logic.use_powerup(powerup)
     
     return jsonify(logic.game_state())
 
