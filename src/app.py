@@ -12,24 +12,30 @@ load_dotenv()
 
 app = Flask(__name__)
 
-VALUE_MAP = { #PROBLEMATIC, Cards should always be tracked so that splits etc work correctly.
+VALUE_MAP = {  # PROBLEMATIC, Cards should always be tracked so that splits etc work correctly.
     "ACE": 11,
     "JACK": 10,
     "QUEEN": 10,
-    "KING": 10
+    "KING": 10,
 }
+
 
 @app.route("/")
 def main():
     return render_template("index.html")
 
+
 @app.route("/game")
 def game():
     return render_template("game.html")
 
-@app.route("/api/state") #This route should not exist. Proper initial load method preferred.
+
+@app.route(
+    "/api/state"
+)  # This route should not exist. Proper initial load method preferred.
 def state():
     return jsonify(logic.game_state())
+
 
 @app.route("/api/deal", methods=["POST"])
 def deal():
@@ -38,8 +44,8 @@ def deal():
 
     if not isinstance(bet, int) or bet <= 0:
         return jsonify({"error": "Invalid bet"}), 400
-    
-    if (logic.game_started):
+
+    if logic.game_started:
         logic.bet(bet)
         return jsonify(logic.start_game())
     else:
@@ -50,12 +56,14 @@ def deal():
 
         return jsonify(logic.start_game())
 
+
 def new_blackjack_deck():
     url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
     response = requests.get(url)
     data = response.json()
     deck_id = data["deck_id"]
     return deck_id
+
 
 def draw_cards(deck_id, count):
     url = f"https://deckofcardsapi.com/api/deck/{deck_id}/draw/?count={count}"
@@ -78,11 +86,12 @@ def draw_cards(deck_id, count):
 
     return cards
 
+
 @app.route("/api/getcelestialdata")
 def get_celestial_data():
     app_id = os.getenv("ASTRONOMY_APP_ID")
     app_secret = os.getenv("ASTRONOMY_APP_SECRET")
-    
+
     auth_str = base64.b64encode(f"{app_id}:{app_secret}".encode()).decode()
 
     url = "https://api.astronomyapi.com/api/v2/bodies/positions"
@@ -97,12 +106,10 @@ def get_celestial_data():
         "elevation": "12",
         "from_date": today,
         "to_date": today,
-        "time": current_time
+        "time": current_time,
     }
 
-    headers = {
-        "Authorization": f"Basic {auth_str}"
-    }
+    headers = {"Authorization": f"Basic {auth_str}"}
 
     response = requests.get(url, headers=headers, params=params)
     data = response.json()
@@ -121,42 +128,57 @@ def get_celestial_data():
 
         if row["entry"]["id"] == "moon":
             moon_phase = cell["extraInfo"]["phase"]["string"]
-    
+
     for constellation in results.values():
         print(constellation)
 
     print(moon_phase)
     return results
 
+
 @app.route("/api/hit")
 def hit():
-    busted = logic.draw_card(1) 
-    
-    if busted:  
+    busted = logic.draw_card(1)
+
+    if busted:
         winner = logic.game_over()
         result = logic.game_state(winner, game_over=True)
         logic.next_turn(winner)
 
         return jsonify(result)
-    
+
     return jsonify(logic.game_state())
+
 
 @app.route("/api/stand")
 def stand():
-    logic.dealer_turn() 
+    logic.dealer_turn()
     winner = logic.game_over()
     result = logic.game_state(winner, game_over=True)
     logic.next_turn(winner)
 
     return jsonify(result)
 
+
 @app.route("/api/use_powerup", methods=["POST"])
 def use_powerup():
     data = request.get_json()
     powerup = data.get("num")
     logic.use_powerup(powerup)
-    
+
     return jsonify(logic.game_state())
+
+    return jsonify(result)
+
+
+@app.route("/api/use_powerup", methods=["POST"])
+def use_powerup():
+    data = request.get_json()
+    powerup = data.get("num")
+    logic.use_powerup(powerup)
+
+    return jsonify(logic.game_state())
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
