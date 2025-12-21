@@ -168,17 +168,5 @@ def use_powerup():
 
     return jsonify(logic.game_state())
 
-    return jsonify(result)
-
-# we get an error each time the flask app runs since we use two endpoints with the same name
-# @app.route("/api/use_powerup", methods=["POST"])
-# def use_powerup():
-#     data = request.get_json()
-#     powerup = data.get("num")
-#     logic.use_powerup(powerup)
-#
-#     return jsonify(logic.game_state())
-#
-
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

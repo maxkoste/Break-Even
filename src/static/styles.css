@@ -53,6 +53,21 @@ h1 {
 .cards-container {
     min-height: 120px;
 }
+
 .card {
+    width: 72px;
+    height: 96px;
     margin: 0 5px;
+
+    display: block;
+    border: none;
+    outline: none;
+    background: transparent;
+    box-shadow: none;
+
+    image-rendering: pixelated;      
+    image-rendering: crisp-edges;   
+    image-rendering: -moz-crisp-edges; 
+    image-rendering: -webkit-optimize-contrast;
 }
+
