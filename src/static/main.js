@@ -196,68 +196,71 @@ async function usePowerUp(num) {
 
 const CARD_IMAGES = {
     "HEARTS": {
-        "ACE": "https://deckofcardsapi.com/static/img/AH.png",
-        "2": "https://deckofcardsapi.com/static/img/2H.png",
-        "3": "https://deckofcardsapi.com/static/img/3H.png",
-        "4": "https://deckofcardsapi.com/static/img/4H.png",
-        "5": "https://deckofcardsapi.com/static/img/5H.png",
-        "6": "https://deckofcardsapi.com/static/img/6H.png",
-        "7": "https://deckofcardsapi.com/static/img/7H.png",
-        "8": "https://deckofcardsapi.com/static/img/8H.png",
-        "9": "https://deckofcardsapi.com/static/img/9H.png",
-        "10": "https://deckofcardsapi.com/static/img/0H.png",
-        "J": "https://deckofcardsapi.com/static/img/JH.png",
-        "Q": "https://deckofcardsapi.com/static/img/QH.png",
-        "K": "https://deckofcardsapi.com/static/img/KH.png"
+        "ACE": "static/assets/AH.png",
+        "2": "static/assets/2H.png",
+        "3": "static/assets/3H.png",
+        "4": "static/assets/4H.png",
+        "5": "static/assets/5H.png",
+        "6": "static/assets/6H.png",
+        "7": "static/assets/7H.png",
+        "8": "static/assets/8H.png",
+        "9": "static/assets/9H.png",
+        "10": "static/assets/TH.png",
+        "J": "static/assets/JH.png",
+        "Q": "static/assets/QH.png",
+        "K": "static/assets/KH.png"
     },
     "CLUBS": {
-        "ACE": "https://deckofcardsapi.com/static/img/AC.png",
-        "2": "https://deckofcardsapi.com/static/img/2C.png",
-        "3": "https://deckofcardsapi.com/static/img/3C.png",
-        "4": "https://deckofcardsapi.com/static/img/4C.png",
-        "5": "https://deckofcardsapi.com/static/img/5C.png",
-        "6": "https://deckofcardsapi.com/static/img/6C.png",
-        "7": "https://deckofcardsapi.com/static/img/7C.png",
-        "8": "https://deckofcardsapi.com/static/img/8C.png",
-        "9": "https://deckofcardsapi.com/static/img/9C.png",
-        "10": "https://deckofcardsapi.com/static/img/0C.png",
-        "J": "https://deckofcardsapi.com/static/img/JC.png",
-        "Q": "https://deckofcardsapi.com/static/img/QC.png",
-        "K": "https://deckofcardsapi.com/static/img/KC.png"
+        "ACE": "static/assets/AC.png",
+        "2": "static/assets/2C.png",
+        "3": "static/assets/3C.png",
+        "4": "static/assets/4C.png",
+        "5": "static/assets/5C.png",
+        "6": "static/assets/6C.png",
+        "7": "static/assets/7C.png",
+        "8": "static/assets/8C.png",
+        "9": "static/assets/9C.png",
+        "10": "static/assets/TC.png",
+        "J": "static/assets/JC.png",
+        "Q": "static/assets/QC.png",
+        "K": "static/assets/KC.png",
 	},
     "DIAMONDS": {
-        "ACE": "https://deckofcardsapi.com/static/img/AD.png",
-        "2": "https://deckofcardsapi.com/static/img/2D.png",
-        "3": "https://deckofcardsapi.com/static/img/3D.png",
-        "4": "https://deckofcardsapi.com/static/img/4D.png",
-        "5": "https://deckofcardsapi.com/static/img/5D.png",
-        "6": "https://deckofcardsapi.com/static/img/6D.png",
-        "7": "https://deckofcardsapi.com/static/img/7D.png",
-        "8": "https://deckofcardsapi.com/static/img/8D.png",
-        "9": "https://deckofcardsapi.com/static/img/9D.png",
-        "10": "https://deckofcardsapi.com/static/img/0D.png",
-        "J": "https://deckofcardsapi.com/static/img/JD.png",
-        "Q": "https://deckofcardsapi.com/static/img/QD.png",
-        "K": "https://deckofcardsapi.com/static/img/KD.png"
+        "ACE": "static/assets/AD.png",
+        "2": "static/assets/2D.png",
+        "3": "static/assets/3D.png",
+        "4": "static/assets/4D.png",
+        "5": "static/assets/5D.png",
+        "6": "static/assets/6D.png",
+        "7": "static/assets/7D.png",
+        "8": "static/assets/8D.png",
+        "9": "static/assets/9D.png",
+        "10": "static/assets/TD.png",
+        "J": "static/assets/JD.png",
+        "Q": "static/assets/QD.png",
+        "K": "static/assets/KD.png",
 	},
     "SPADES": {
-        "ACE": "https://deckofcardsapi.com/static/img/AS.png",
-        "2": "https://deckofcardsapi.com/static/img/2S.png",
-        "3": "https://deckofcardsapi.com/static/img/3S.png",
-        "4": "https://deckofcardsapi.com/static/img/4S.png",
-        "5": "https://deckofcardsapi.com/static/img/5S.png",
-        "6": "https://deckofcardsapi.com/static/img/6S.png",
-        "7": "https://deckofcardsapi.com/static/img/7S.png",
-        "8": "https://deckofcardsapi.com/static/img/8S.png",
-        "9": "https://deckofcardsapi.com/static/img/9S.png",
-        "10": "https://deckofcardsapi.com/static/img/0S.png",
-        "J": "https://deckofcardsapi.com/static/img/JS.png",
-        "Q": "https://deckofcardsapi.com/static/img/QS.png",
-        "K": "https://deckofcardsapi.com/static/img/KS.png"
+        "ACE": "static/assets/AS.png",
+        "2": "static/assets/2S.png",
+        "3": "static/assets/3S.png",
+        "4": "static/assets/4S.png",
+        "5": "static/assets/5S.png",
+        "6": "static/assets/6S.png",
+        "7": "static/assets/7S.png",
+        "8": "static/assets/8S.png",
+        "9": "static/assets/9S.png",
+        "10": "static/assets/TS.png",
+        "J": "static/assets/JS.png",
+        "Q": "static/assets/QS.png",
+        "K": "static/assets/KS.png",
 	},
 	"JOKER": {
-        "JOKER": "https://deckofcardsapi.com/static/img/X2.png"
-	}
+        "JOKER": "static/assets/Joker.png",
+	},
+    "BACKGROUND": {
+        "BACKGROUND": "static/assets/Background.png",
+    }
 };
 
 function renderCards(containerId, cards) {
@@ -287,8 +290,6 @@ function renderCards(containerId, cards) {
 			img.alt = `${value} of ${suit}`;
 
             img.className = "card";
-            img.width = 72;
-            img.height = 96;
             container.appendChild(img);
         });
 }
