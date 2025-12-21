@@ -43,11 +43,19 @@ function updateBankUI(chips, bet) {
     document.getElementById("currentBetDisplay").textContent = bet;
 }
 
+// function extractBet(playerHand) {
+//     if (!Array.isArray(playerHand) || playerHand.length === 0) {
+//         return 0;
+//     }
+//     return playerHand[0];
+// }
 function extractBet(playerHand) {
     if (!Array.isArray(playerHand) || playerHand.length === 0) {
         return 0;
     }
-    return playerHand[0];
+
+    const betEntry = playerHand.find(([value, suit]) => suit === "BET");
+    return betEntry ? betEntry[0] : 0;
 }
 
 function populateBetDropdown(chips, selectedBet = null) {
@@ -129,8 +137,13 @@ function endRoundUI() {
 
 
 async function startGame() {
-    const bet = parseInt(document.getElementById("betSelect").value, 10);
+    let bet = parseInt(document.getElementById("betSelect").value, 10);
 
+	if (!bet || bet <= 0) {
+		// discard or alert user
+		console.log("No valid bet selected, setting it to 50");
+		bet = 50;
+	}
     const data = await callGameApi("/api/deal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -241,6 +254,9 @@ const CARD_IMAGES = {
         "J": "https://deckofcardsapi.com/static/img/JS.png",
         "Q": "https://deckofcardsapi.com/static/img/QS.png",
         "K": "https://deckofcardsapi.com/static/img/KS.png"
+	},
+	"JOKER": {
+        "JOKER": "https://deckofcardsapi.com/static/img/X2.png"
 	}
 };
 
@@ -257,6 +273,8 @@ function renderCards(containerId, cards) {
         .filter(([value, suit]) => suit !== "BET")
         .forEach(([value, suit]) => {
             // Convert numeric values to string keys for CARD_IMAGES
+			if (suit === "BLACK" || suit === "RED") suit = "JOKER"; // map joker suits
+
             if (value === 1) value = "ACE";
             else if (value === 11) value = "J";
             else if (value === 12) value = "Q";
@@ -264,8 +282,10 @@ function renderCards(containerId, cards) {
             else value = value.toString();
 
             const img = document.createElement("img");
-            img.src = CARD_IMAGES[suit][value] || "https://via.placeholder.com/72x96?text=?";
-            img.alt = `${value} of ${suit}`;
+
+			img.src = CARD_IMAGES[suit][value];
+			img.alt = `${value} of ${suit}`;
+
             img.className = "card";
             img.width = 72;
             img.height = 96;
