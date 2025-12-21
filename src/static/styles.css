@@ -49,3 +49,10 @@ h1 {
     background-color: #a01729; 
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
 }
+
+.cards-container {
+    min-height: 120px;
+}
+.card {
+    margin: 0 5px;
+}

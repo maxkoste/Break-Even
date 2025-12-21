@@ -85,6 +85,13 @@ function handleGameState(data, resetDropdown = true) {
 
     populateModalButtonsFromArray(data.powerups);
 
+	if (data.player) {
+    renderCards("playerCards", data.player);
+	}
+	if (data.dealer) {
+		renderCards("dealerCards", data.dealer);
+	}
+
     const chips = data.chips;
     const bet = extractBet(data.player);
 
@@ -172,4 +179,96 @@ async function usePowerUp(num) {
         body: JSON.stringify({ num })
     });
     handleGameState(data);
+}
+
+const CARD_IMAGES = {
+    "HEARTS": {
+        "ACE": "https://deckofcardsapi.com/static/img/AH.png",
+        "2": "https://deckofcardsapi.com/static/img/2H.png",
+        "3": "https://deckofcardsapi.com/static/img/3H.png",
+        "4": "https://deckofcardsapi.com/static/img/4H.png",
+        "5": "https://deckofcardsapi.com/static/img/5H.png",
+        "6": "https://deckofcardsapi.com/static/img/6H.png",
+        "7": "https://deckofcardsapi.com/static/img/7H.png",
+        "8": "https://deckofcardsapi.com/static/img/8H.png",
+        "9": "https://deckofcardsapi.com/static/img/9H.png",
+        "10": "https://deckofcardsapi.com/static/img/0H.png",
+        "J": "https://deckofcardsapi.com/static/img/JH.png",
+        "Q": "https://deckofcardsapi.com/static/img/QH.png",
+        "K": "https://deckofcardsapi.com/static/img/KH.png"
+    },
+    "CLUBS": {
+        "ACE": "https://deckofcardsapi.com/static/img/AC.png",
+        "2": "https://deckofcardsapi.com/static/img/2C.png",
+        "3": "https://deckofcardsapi.com/static/img/3C.png",
+        "4": "https://deckofcardsapi.com/static/img/4C.png",
+        "5": "https://deckofcardsapi.com/static/img/5C.png",
+        "6": "https://deckofcardsapi.com/static/img/6C.png",
+        "7": "https://deckofcardsapi.com/static/img/7C.png",
+        "8": "https://deckofcardsapi.com/static/img/8C.png",
+        "9": "https://deckofcardsapi.com/static/img/9C.png",
+        "10": "https://deckofcardsapi.com/static/img/0C.png",
+        "J": "https://deckofcardsapi.com/static/img/JC.png",
+        "Q": "https://deckofcardsapi.com/static/img/QC.png",
+        "K": "https://deckofcardsapi.com/static/img/KC.png"
+	},
+    "DIAMONDS": {
+        "ACE": "https://deckofcardsapi.com/static/img/AD.png",
+        "2": "https://deckofcardsapi.com/static/img/2D.png",
+        "3": "https://deckofcardsapi.com/static/img/3D.png",
+        "4": "https://deckofcardsapi.com/static/img/4D.png",
+        "5": "https://deckofcardsapi.com/static/img/5D.png",
+        "6": "https://deckofcardsapi.com/static/img/6D.png",
+        "7": "https://deckofcardsapi.com/static/img/7D.png",
+        "8": "https://deckofcardsapi.com/static/img/8D.png",
+        "9": "https://deckofcardsapi.com/static/img/9D.png",
+        "10": "https://deckofcardsapi.com/static/img/0D.png",
+        "J": "https://deckofcardsapi.com/static/img/JD.png",
+        "Q": "https://deckofcardsapi.com/static/img/QD.png",
+        "K": "https://deckofcardsapi.com/static/img/KD.png"
+	},
+    "SPADES": {
+        "ACE": "https://deckofcardsapi.com/static/img/AS.png",
+        "2": "https://deckofcardsapi.com/static/img/2S.png",
+        "3": "https://deckofcardsapi.com/static/img/3S.png",
+        "4": "https://deckofcardsapi.com/static/img/4S.png",
+        "5": "https://deckofcardsapi.com/static/img/5S.png",
+        "6": "https://deckofcardsapi.com/static/img/6S.png",
+        "7": "https://deckofcardsapi.com/static/img/7S.png",
+        "8": "https://deckofcardsapi.com/static/img/8S.png",
+        "9": "https://deckofcardsapi.com/static/img/9S.png",
+        "10": "https://deckofcardsapi.com/static/img/0S.png",
+        "J": "https://deckofcardsapi.com/static/img/JS.png",
+        "Q": "https://deckofcardsapi.com/static/img/QS.png",
+        "K": "https://deckofcardsapi.com/static/img/KS.png"
+	}
+};
+
+function renderCards(containerId, cards) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = ""; // Clear previous cards
+	
+    console.log(containerId, cards);
+
+    cards
+        // Filter out BET entries
+        .filter(([value, suit]) => suit !== "BET")
+        .forEach(([value, suit]) => {
+            // Convert numeric values to string keys for CARD_IMAGES
+            if (value === 1) value = "ACE";
+            else if (value === 11) value = "J";
+            else if (value === 12) value = "Q";
+            else if (value === 13) value = "K";
+            else value = value.toString();
+
+            const img = document.createElement("img");
+            img.src = CARD_IMAGES[suit][value] || "https://via.placeholder.com/72x96?text=?";
+            img.alt = `${value} of ${suit}`;
+            img.className = "card";
+            img.width = 72;
+            img.height = 96;
+            container.appendChild(img);
+        });
 }
