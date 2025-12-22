@@ -288,6 +288,7 @@ function renderCards(containerId, cards) {
 
 			img.src = CARD_IMAGES[suit][value];
 			img.alt = `${value} of ${suit}`;
+            img.loading = "eager";
 
             img.className = "card";
             container.appendChild(img);
