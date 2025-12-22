@@ -122,7 +122,6 @@ def hit():
         winner = logic.game_over()
         result = logic.game_state(winner, game_over=True)
         logic.next_turn(winner)
-
         return jsonify(result)
 
     return jsonify(logic.game_state())

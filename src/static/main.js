@@ -93,12 +93,16 @@ function handleGameState(data, resetDropdown = true) {
 
     populateModalButtonsFromArray(data.powerups);
 
-	if (data.player) {
-    renderCards("playerCards", data.player);
-	}
-	if (data.dealer) {
-		renderCards("dealerCards", data.dealer);
-	}
+    if (data.player) {
+        renderCards("playerCards", data.player);
+    }
+
+    if (data.dealer) {
+        const hideDealerCard =
+            data.game_started && !data.game_over;
+
+        renderCards("dealerCards", data.dealer, hideDealerCard);
+    }
 
     const chips = data.chips;
     const bet = extractBet(data.player);
@@ -109,13 +113,9 @@ function handleGameState(data, resetDropdown = true) {
 
     updateBankUI(chips, bet);
 
-    if (!data.game_started) {
-        return // We should use a better flag system than this for different game states.
-    } else if (data.game_over) {
-        endRoundUI();
-    } else {
-        inRoundUI();
-    }
+    if (!data.game_started) return;
+    else if (data.game_over) endRoundUI();
+    else inRoundUI();
 }
 
 function inRoundUI() {
@@ -263,20 +263,29 @@ const CARD_IMAGES = {
     }
 };
 
-function renderCards(containerId, cards) {
+function renderCards(containerId, cards, hideFirst = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    container.innerHTML = ""; // Clear previous cards
-	
-    console.log(containerId, cards);
+    container.innerHTML = "";
 
     cards
-        // Filter out BET entries
         .filter(([value, suit]) => suit !== "BET")
-        .forEach(([value, suit]) => {
-            // Convert numeric values to string keys for CARD_IMAGES
-			if (suit === "BLACK" || suit === "RED") suit = "JOKER"; // map joker suits
+        .forEach(([value, suit], index) => {
+
+            const img = document.createElement("img");
+            img.className = "card";
+            img.loading = "eager";
+
+            // Hide dealer's first card
+            if (hideFirst && index === 0) {
+                img.src = CARD_IMAGES.BACKGROUND.BACKGROUND;
+                img.alt = "Face-down card";
+                container.appendChild(img);
+                return;
+            }
+
+            if (suit === "BLACK" || suit === "RED") suit = "JOKER";
 
             if (value === "ACE") value = "ACE";
             else if (value === "JACK") value = "J";
@@ -284,13 +293,10 @@ function renderCards(containerId, cards) {
             else if (value === "KING") value = "K";
             else value = value.toString();
 
-            const img = document.createElement("img");
+            img.src = CARD_IMAGES[suit][value];
+            img.alt = `${value} of ${suit}`;
 
-			img.src = CARD_IMAGES[suit][value];
-			img.alt = `${value} of ${suit}`;
-            img.loading = "eager";
-
-            img.className = "card";
             container.appendChild(img);
         });
 }
+
