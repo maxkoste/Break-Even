@@ -278,10 +278,10 @@ function renderCards(containerId, cards) {
             // Convert numeric values to string keys for CARD_IMAGES
 			if (suit === "BLACK" || suit === "RED") suit = "JOKER"; // map joker suits
 
-            if (value === 1) value = "ACE";
-            else if (value === 11) value = "J";
-            else if (value === 12) value = "Q";
-            else if (value === 13) value = "K";
+            if (value === "ACE") value = "ACE";
+            else if (value === "JACK") value = "J";
+            else if (value === "QUEEN") value = "Q";
+            else if (value === "KING") value = "K";
             else value = value.toString();
 
             const img = document.createElement("img");

@@ -71,3 +71,10 @@ h1 {
     image-rendering: -webkit-optimize-contrast;
 }
 
+.cards-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+}

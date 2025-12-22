@@ -12,14 +12,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-VALUE_MAP = {  # PROBLEMATIC, Cards should always be tracked so that splits etc work correctly.
-    "ACE": 11,
-    "JACK": 10,
-    "QUEEN": 10,
-    "KING": 10,
-}
-
-
 @app.route("/")
 def main():
     return render_template("index.html")
@@ -67,23 +59,9 @@ def new_blackjack_deck():
 
 def draw_cards(deck_id, count):
     url = f"https://deckofcardsapi.com/api/deck/{deck_id}/draw/?count={count}"
-
     response = requests.get(url)
     data = response.json()
-
-    cards = []
-
-    for card in data["cards"]:
-        value = card["value"]
-        suit = card["suit"]
-
-        if value == "JOKER":
-            cards.append(["JOKER", suit])
-        elif value in VALUE_MAP:
-            cards.append([VALUE_MAP[value], suit])
-        else:
-            cards.append([int(value), suit])
-
+    cards = [(card["value"], card["suit"]) for card in data["cards"]]
     return cards
 
 
