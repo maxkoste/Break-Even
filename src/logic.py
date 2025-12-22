@@ -15,10 +15,14 @@ powerups = [0, 5, 5]
 powerup_info = None
 game_started = False
 
+VALUE_MAP = {
+    "ACE": 11,
+    "JACK": 10,
+    "QUEEN": 10,
+    "KING": 10,
+}
 
-def populate_deck(
-    cards,
-):  # Take formatted data from the API call and place the cards inside the deck.
+def populate_deck(cards):  # Take data from the API call and place the cards inside the deck.
     global deck
     deck = deque(cards)
 
@@ -47,7 +51,7 @@ def draw_card(hand_index):
 
     value, suit = card
     if value != "JOKER":
-        scores[hand_index] += value
+        scores[hand_index] += get_score(value)
     elif hand_index != 0:
         powerups.append(
             random.choice(range(0, 4))
@@ -57,9 +61,8 @@ def draw_card(hand_index):
 
     # check if over 21
     if scores[hand_index] > 21:
-        for i, card in enumerate(hands[hand_index]):
-            if card[0] == 11:  # ace found
-                hands[hand_index][i] = (1, card[1])  # change ace from 11 to 1
+        for card in hands[hand_index]:
+            if card[0] == "ACE":  # ace found
                 scores[hand_index] -= 10
                 print(f"Ace converted to 1! New score: {scores[hand_index]}")
                 break
@@ -70,6 +73,12 @@ def draw_card(hand_index):
             return True
 
     return False
+
+
+def get_score(card_value):
+    if card_value in VALUE_MAP:
+        return VALUE_MAP[card_value]
+    return int(card_value)
 
 
 def bet(amount, hand_index=1):
@@ -205,7 +214,8 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
             pass
         case 5:  # Mars Major, destroy dealers card
             powerup_info = f"Dealers {hands[0][1]} has been obliterated!!!"
-            scores[0] -= hands[0][1][0]
+            card_value, suit = hands[0][1]
+            scores[0] -= get_score(card_value)
             del hands[0][1]
         case 6:  # Jupter Major, search next 7 cards, draw the one that gets you closest to 21.
             pass
