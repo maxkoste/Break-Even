@@ -1,6 +1,3 @@
-# TODO: Import neccessary utilities and make the API calls to handle the shuffling of cards.
-# Create endpoints that the frontend can access
-#
 from flask import Flask, render_template, jsonify, request
 import requests, base64
 import logic

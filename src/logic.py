@@ -5,11 +5,6 @@ chips = 200
 deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
-# Should be double array, to store several hands when splitting, each with cards.
-# Maybe the last value in card arrays is the player's bet? Maybe last hand contains jokers?
-# There may not be a point in saving info about cards other than score. Aces?
-# A player should have a "turn" for each hand they currently have, excluding joker hand.
-# Maybe that is tracked in JS?
 scores = [0, 0]
 powerups = [0, 5, 5]
 powerup_info = None
