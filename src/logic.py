@@ -93,10 +93,18 @@ def bet(amount, hand_index=1):
     # Store the bet in the hand (as the first element in the hand)
     hands[hand_index].append((amount, "BET"))
 
-    print(amount, chips)
+    if chips <= 0:
+        return "GAME_OVER"
 
     return f"Bet of {amount} placed on hand {hand_index}."
 
+def reset_game():
+    global chips, hands, scores, game_started, powerups
+    chips = 200
+    hands = [[], []]
+    scores = [0, 0]
+    powerups = [0, 5, 5]
+    game_started = False
 
 def split():  # Place one of player's cards into a new hand.
     pass
@@ -150,6 +158,10 @@ def game_over():  # Compare decks, if 1 over 21 other is the winner, otherwise h
         chips += bet_amount
         winner = "It's a tie!"
 
+        # Om spelaren har 0 chips efter detta, signalera GAME_OVER
+    if chips <= 0:
+        return "GAME_OVER"
+    
     return winner
 
 

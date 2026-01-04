@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Over</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Game Over</h1>
+    <p>Dina chips är slut...</p>
+
+    <form action="/reset" method="post">
+        <button type="submit">Börja om spelet</button>
+    </form>
+</body>
+</html>

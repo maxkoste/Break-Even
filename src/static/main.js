@@ -114,8 +114,16 @@ function handleGameState(data, resetDropdown = true) {
     updateBankUI(chips, bet);
 
     if (!data.game_started) return;
-    else if (data.game_over) endRoundUI();
-    else inRoundUI();
+    else if (data.game_over) {
+        if (data.chips <= 0) {
+            // Spelaren har inga chips kvar → redirect till game-over-sidan
+            window.location.href = "/game-over";
+        } else {
+            endRoundUI(); // vanlig runda slut
+        }
+    } else {
+        inRoundUI();
+    }
 }
 
 function inRoundUI() {

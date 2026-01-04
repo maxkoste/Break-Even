@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect
 import requests, base64
 import logic
 import os
@@ -16,7 +16,20 @@ def main():
 
 @app.route("/game")
 def game():
-    return render_template("game.html")
+    if logic.chips <= 0:
+        return render_template("game_over.html")
+
+    return render_template("game.html", chips=logic.chips)
+
+@app.route("/game-over")
+def game_over():
+    return render_template("game_over.html")
+
+
+@app.route("/reset", methods=["POST"])
+def reset():
+    logic.reset_game()
+    return redirect("/")
 
 
 @app.route(
@@ -34,16 +47,16 @@ def deal():
     if not isinstance(bet, int) or bet <= 0:
         return jsonify({"error": "Invalid bet"}), 400
 
-    if logic.game_started:
-        logic.bet(bet)
-        return jsonify(logic.start_game())
-    else:
-        deck_id = new_blackjack_deck()
-        cards = draw_cards(deck_id, 324)
-        logic.bet(bet)
-        logic.populate_deck(cards)
+    # Om det är nytt spel efter game-over, resetta game state
+    if logic.chips <= 0:
+        logic.reset_game()
 
-        return jsonify(logic.start_game())
+    deck_id = new_blackjack_deck()
+    cards = draw_cards(deck_id, 324)
+    logic.bet(bet)
+    logic.populate_deck(cards)
+
+    return jsonify(logic.start_game())
 
 
 def new_blackjack_deck():
