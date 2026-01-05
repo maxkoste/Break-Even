@@ -39,35 +39,43 @@ def draw_card(hand_index):
 
     if hand_index == 0:
         while deck[0][0] == "JOKER":
-            print("JOKER DETECTED, OBLITERATE")
             deck.rotate(1)
 
     card = deck.popleft()
-
-    value, suit = card
-    if value != "JOKER":
-        scores[hand_index] += get_score(value)
-    elif hand_index != 0:
-        powerups.append(
-            random.choice(range(0, 4))
-        )  # 0-3, Expand to 0-22 for all 21 options
-
     hands[hand_index].append(card)
 
-    # check if over 21
-    if scores[hand_index] > 21:
-        for card in hands[hand_index]:
-            if card[0] == "ACE":  # ace found
-                scores[hand_index] -= 10
-                print(f"Ace converted to 1! New score: {scores[hand_index]}")
-                break
+    if card[0] == "JOKER" and hand_index != 0:
+        powerups.append(random.choice(range(0, 4)))
 
-        # check again if over 21
-        # NOT >= 21 because we want to give players a chance to use a powerup.
-        if scores[hand_index] > 21:
-            return True
+    recalculate_score(hand_index)
 
-    return False
+    return scores[hand_index] > 21
+
+
+def recalculate_score(hand_index):
+    score = 0
+    aces = 0
+
+    for card in hands[hand_index]:
+        # 🔹 Hoppa över bets
+        if isinstance(card, tuple) and card[1] == "BET":
+            continue
+
+        value, suit = card
+
+        if value == "ACE":
+            score += 11
+            aces += 1
+        elif value in VALUE_MAP:
+            score += VALUE_MAP[value]
+        elif value != "JOKER":
+            score += int(value)
+
+    while score > 21 and aces > 0:
+        score -= 10
+        aces -= 1
+
+    scores[hand_index] = score
 
 
 def get_score(card_value):
