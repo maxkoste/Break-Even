@@ -7,7 +7,7 @@ function getLocation() {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(success, handleError);
+  return navigator.geolocation.getCurrentPosition(success, handleError);
 }
 
 function success(position) {
@@ -145,7 +145,15 @@ function endRoundUI() {
 
 
 async function startGame() {
-    let bet = parseInt(document.getElementById("betSelect").value, 10);
+
+	let bet = 0;
+
+	try {
+		bet = parseInt(document.getElementById("betSelect").value, 10);
+	} catch (error) {
+		console.log("Value is null - setting bet to 50 for first round")
+		bet = 50;
+	}
 
 	if (!bet || bet <= 0) {
 		// discard or alert user
@@ -161,6 +169,63 @@ async function startGame() {
     handleGameState(data, false);
 }
 
+async function initGameState(){
+
+	const currentLocation = getLocation();
+
+	const currentLocationJson = JSON.stringify(currentLocation);
+
+	console.log(currentLocationJson);
+
+	const bet = 50;
+
+	const gameData = await callGameApi("/api/init-game-state", {
+		method: "POST",
+		headers: {"Content-Type": "application/json"},
+		body: JSON.stringify({})
+	});
+
+	const betData = await callGameApi("/api/deal", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ bet })
+	});
+
+	console.log(gameData);
+
+	localStorage.setItem("gameData", JSON.stringify(gameData));
+
+	window.location.href="/game";
+
+	const savedDataString = localStorage.getItem("gameData");
+
+	if (savedDataString) {
+		// const savedData = JSON.parse(savedDataString);
+		console.log(savedDataString);
+	} else{
+		console.log("No saved data :( ")
+	}
+
+	startGame();
+}
+
+async function sendCelestialData(){
+
+	await callGameApi("/api/getcelestialdata")
+
+    console.log("Sending data...");
+
+    const select = document.getElementById("sign");
+    const selectedSign = select.value;
+
+    console.log("Selected sign:", selectedSign);
+ 
+    const data = await callGameApi("/api/sendSign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedSign })
+    });
+}
 
 async function hit() {
     const data = await callGameApi("/api/hit");

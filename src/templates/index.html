@@ -11,9 +11,20 @@
     <p>Welcome!</p>
     <p id="demo">Click the button to get location</p>
     <button onclick="getLocation()">Get location</button>
-    <a href="{{ url_for('game') }}">
-        <button class="game-button">Start Game</button>
-    </a>
+
+		<form onsubmit="return false;">
+			<label for="sign">Choose your sign:</label>
+			<select id="sign">
+				<option value="sagittarius">Sagittarius</option>
+				<option value="taurus">Taurus</option>
+				<option value="gemini">Gemini</option>
+				<option value="aries">Aries</option>
+			</select>
+		</form>
+
+    <!-- <a href="{{ url_for('game') }}"> -->
+		<button class="game-button" onclick="initGameState()">Start Game</button>
+    <!-- </a> -->
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

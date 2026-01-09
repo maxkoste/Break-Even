@@ -9,6 +9,7 @@ scores = [0, 0]
 powerups = [0, 5, 5]
 powerup_info = None
 game_started = False
+celestial_data = None
 
 VALUE_MAP = {
     "ACE": 11,
@@ -68,6 +69,11 @@ def draw_card(hand_index):
             return True
 
     return False
+
+def set_celestial_data(data):
+    global celestial_data
+    celestial_data = data
+    print("setting celestial data: \n", celestial_data)
 
 
 def get_score(card_value):
@@ -190,7 +196,9 @@ def next_turn(
     scores = [0, 0]
 
 
-def assign_powerups(player_data):  # Read celestial data and assign correct powerups
+def assign_powerups(selected_sign):  # Read celestial data and assign correct powerups
+    print("assigning powerups ", selected_sign)
+
     powerups.append(0)
 
 
