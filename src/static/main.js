@@ -227,24 +227,6 @@ async function initGameState(){
 	startGame();
 }
 
-// async function sendCelestialData(){
-//
-// 	await callGameApi("/api/getcelestialdata")
-//
-//     console.log("Sending data...");
-//
-//     const select = document.getElementById("sign");
-//     const selectedSign = select.value;
-//
-//     console.log("Selected sign:", selectedSign);
-//
-//     const data = await callGameApi("/api/sendSign", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({ selectedSign })
-//     });
-// }
-
 async function hit() {
     const data = await callGameApi("/api/hit");
     handleGameState(data);
