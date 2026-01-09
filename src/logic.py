@@ -6,7 +6,7 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = [0, 5, 5]
+powerups = []
 powerup_info = None
 game_started = False
 celestial_data = None
@@ -19,6 +19,7 @@ VALUE_MAP = {
     "KING": 10,
 }
 
+#int corresponds to the case in the method use_powerup()
 BODY_POWERUPS = {
     "Moon": 1,
     "Sun": 0,
@@ -100,6 +101,8 @@ def set_celestial_data(data):
 
     for body, sign in celestial_data.items():
         if sign == player_sign and body in BODY_POWERUPS:
+            powerup_id = BODY_POWERUPS.get(body)
+            print(f"Match found: body={body}, sign={sign}, powerup={powerup_id}")
             assign_powerups(BODY_POWERUPS[body])
 
     print("Player Sign:", player_sign)
