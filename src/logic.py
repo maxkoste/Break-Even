@@ -34,7 +34,13 @@ def populate_deck(cards):  # Take data from the API call and place the cards ins
     deck = deque(cards)
 
 
-def start_game():  # Give both players 2 cards.
+def start_game():
+    """
+    Starts a new round by dealing two cards to each player.
+
+    Returns:
+        dict: The initial game state.
+    """
     global game_started
     game_started = True
 
@@ -47,6 +53,17 @@ def start_game():  # Give both players 2 cards.
 
 
 def draw_card(hand_index):
+    """
+    Draws a card from the deck and adds it to the specified hand.
+
+    Updates the hand's score and returns whether the hand is bust.
+
+    Args:
+        hand_index (int): Index of the hans (0 = dealer, 1 = player).
+
+    Returns:
+        bool: True if the hand's score exceeds 21, otherwise False.
+    """
     global hands, scores, deck
 
     if hand_index == 0:
@@ -65,6 +82,14 @@ def draw_card(hand_index):
 
 
 def recalculate_score(hand_index):
+    """
+    Recalculates the total score for a hand according to Blackjack rules.
+
+    Handles ace values (11 or 1) and ignores non-card entries such as bets.
+
+    Args:
+        hand_index (int): Index of the hans (0 = dealer, 1 = player).
+    """
     score = 0
     aces = 0
 
@@ -127,12 +152,32 @@ def set_player_sign(sign):
     player_sign = selected_sign
 
 def get_score(card_value):
+    """
+    Returns the Blackjack point value of a card.
+
+    Args:
+        card_value (str): The value of the card (e.g. "ACE", "KING", "7").
+
+    Returns:
+        int: The numerical score associated with the card.
+    """
     if card_value in VALUE_MAP:
         return VALUE_MAP[card_value]
     return int(card_value)
 
 
 def bet(amount, hand_index=1):
+    """
+    Places a bet on the specified hand and deducts chips from the player.
+
+    Args:
+        amount (int): The amount of chips to bet.
+        hand_index(int, optional): Index of the hand to place the bet on.
+            Defaults to 1 (player hand).
+
+    Returns:
+        str: A message indicating the result of the bet.
+    """
     global chips
 
     # Ensure the bet is positive
@@ -155,6 +200,12 @@ def bet(amount, hand_index=1):
     return f"Bet of {amount} placed on hand {hand_index}."
 
 def reset_game():
+    """
+    Resets the game state to its initial values.
+
+    Restores chips, clears hands and scores, resets powerups,
+    and marks the game as not started
+    """
     global chips, hands, scores, game_started, powerups
     chips = 200
     hands = [[], []]
@@ -184,13 +235,28 @@ def insurance():  # Place an insurance if dealers first card is an Ace
     pass
 
 
-def dealer_turn():  # Algorithm for playing. Generally hit until 17 is reached, then stand.
+def dealer_turn():
+    """
+    Plays the dealer's turn automatically according to Blackjack rules.
+
+    The delaer draws until the score reaches at least 17.
+    """
     while scores[0] < 17:
         draw_card(0)
 
 
-def game_over():  # Compare decks, if 1 over 21 other is the winner, otherwise highest wins. Return
-    # winner or tie. Next turn.
+def game_over():
+    """
+    Determines the outcome of the current round and updates chips accordingly.
+
+    Compares player and dealer scores:
+    - If one hand is over 21, the other wins.
+    - Otherwise, the highest score wins.
+    - Ties return the bet to the player.
+
+    Returns:
+        str: A message indicating the winner, or "GAME_OVER" if the player has no chips left.
+    """
     global chips
     player_score = scores[1]
     dealer_score = scores[0]
@@ -223,6 +289,17 @@ def game_over():  # Compare decks, if 1 over 21 other is the winner, otherwise h
 
 
 def game_state(winner=None, game_over=False):
+    """
+    Returns the current state of the game as a dictionary.
+
+    Args:
+        winner (str, optional): The winner message for the round. Defaults to None.
+        game_over (bool, optional): Indicates if the game has ended. Defaults to False.
+
+    Returns:
+        dict: A dictionary containging player and dealer hands, scores, chips, powerups,
+        game status and the winner if available.
+    """
     return {
         "player": hands[1],
         "dealer": hands[0],
@@ -237,10 +314,13 @@ def game_state(winner=None, game_over=False):
     }
 
 
-def next_turn(
-    winner,
-):  # Payout bet on win, nothing on loss, keep on table if tie. Reset hands
-    # except joker maybe?
+def next_turn(winner):  
+    """
+    Prepares for the next round by resetting hands and scores.
+
+    Args:
+        winner (str): The winner of the previous round (unused in this function.)
+    """
     global hands, scores
 
     hands = [[], []]
@@ -253,8 +333,17 @@ def assign_powerups(powerup_id):  # Read celestial data and assign correct power
 
 
 def draw_card_by_index(index, hand_index):
-    deck.rotate(-index)  # index of 0 does nothing, -1 takes next in list, so on
-    draw_card(hand_index)  # only used by player
+    """
+    Draws a card from a specific positions in the deck into the given hand.
+
+    Rotates the deck so that the card at the specified index is drawn next.
+
+    Args:
+        index (int): The position in the deck of the card to draw.
+        hand_index (int): Index of the hand to receive the card (0 = dealer, 1 = player).
+    """
+    deck.rotate(-index)
+    draw_card(hand_index)
 
 
 def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor

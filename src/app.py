@@ -11,11 +11,19 @@ app = Flask(__name__)
 
 @app.route("/")
 def main():
+    """
+    Renders the landing page of the application.
+    """
     return render_template("index.html")
 
 
 @app.route("/game")
 def game():
+    """
+    Renders the main game page.
+
+    If the player has no chips left, the game over page is shown instead.
+    """
     if logic.chips <= 0:
         return render_template("game_over.html")
 
@@ -23,6 +31,9 @@ def game():
 
 @app.route("/game-over")
 def game_over():
+    """
+    Renders the game over page.
+    """
     return render_template("game_over.html")
 
 @app.route("/api/init-game-state", methods =["POST"])
@@ -48,6 +59,9 @@ def init_game_state():
 
 @app.route("/reset", methods=["POST"])
 def reset():
+    """
+    Resets the game state and redirects to the landing page.
+    """
     logic.reset_game()
     return redirect("/")
 
@@ -56,11 +70,18 @@ def reset():
     "/api/state"
 )  # This route should not exist. Proper initial load method preferred.
 def state():
+    """
+    Returns the current game state as JSON.
+    """
     return jsonify(logic.game_state())
 
 
 @app.route("/api/deal", methods=["POST"])
 def deal():
+    """
+    Starts a new round by placing a bet, creating a new deck,
+    and dealing initial cards.
+    """
     data = request.get_json()
     bet = data.get("bet")
 
@@ -80,6 +101,12 @@ def deal():
 
 
 def new_blackjack_deck():
+    """
+    Requests a new shuffled Blackjack deck from the Deck of Cards API.
+
+    Returns:
+        str: The ID of the newly created deck.
+    """
     url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
     response = requests.get(url)
     data = response.json()
@@ -88,6 +115,16 @@ def new_blackjack_deck():
 
 
 def draw_cards(deck_id, count):
+    """
+    Draws a specified number of cards from a deck using the Deck of Cards API.
+
+    Args:
+        deck_id (str): The ID of the deck.
+        count (int): Number of cards to draw.
+
+    Returns:
+        list[tuple]: List of cards as (value, suit).
+    """
     url = f"https://deckofcardsapi.com/api/deck/{deck_id}/draw/?count={count}"
     response = requests.get(url)
     data = response.json()
@@ -148,6 +185,11 @@ def get_celestial_data():
 
 @app.route("/api/hit")
 def hit():
+    """
+    Handles the player hit action by drawing a card.
+
+    Ends the round if the player busts.
+    """
     busted = logic.draw_card(1)
 
     if busted:
@@ -161,6 +203,9 @@ def hit():
 
 @app.route("/api/stand")
 def stand():
+    """
+    Handles the player stand action and plays the dealer's turn.
+    """
     logic.dealer_turn()
     winner = logic.game_over()
     result = logic.game_state(winner, game_over=True)
@@ -171,6 +216,9 @@ def stand():
 
 @app.route("/api/use_powerup", methods=["POST"])
 def use_powerup():
+    """
+    Applies a selected power-up to the current game state.
+    """
     data = request.get_json()
     powerup = data.get("num")
     logic.use_powerup(powerup)
