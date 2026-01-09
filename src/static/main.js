@@ -182,8 +182,6 @@ async function initGameState(){
 
 	const currentLocationJson = JSON.stringify(currentLocation);
 
-	console.log(currentLocationJson);
-
 	const bet = 50;
 
     const select = document.getElementById("sign");
@@ -201,8 +199,6 @@ async function initGameState(){
 		body: JSON.stringify({ bet })
 	});
 
-
-	console.log(gameData);
 
 	localStorage.setItem("gameData", JSON.stringify(gameData));
 

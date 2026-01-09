@@ -16,7 +16,6 @@ def main():
 
 @app.route("/game")
 def game():
-    print("I was called")
     if logic.chips <= 0:
         return render_template("game_over.html")
 
@@ -96,13 +95,10 @@ def draw_cards(deck_id, count):
     return cards
 
 def send_sign(data):
-    print("Setting player sign!!!!!")
     logic.set_player_sign(data)
     return jsonify(data)
 
 def get_celestial_data():
-
-    print("getting celestial data! ")
 
     app_id = os.getenv("ASTRONOMY_APP_ID")
     app_secret = os.getenv("ASTRONOMY_APP_SECRET")
@@ -113,7 +109,6 @@ def get_celestial_data():
 
     today = datetime.now().strftime("%Y-%m-%d")
     current_time = datetime.now().strftime("%H:%M:%S")
-    print(today, current_time)
 
     params = {
         "latitude": "55.6050",
@@ -144,11 +139,6 @@ def get_celestial_data():
         if row["entry"]["id"] == "moon":
             moon_phase = cell["extraInfo"]["phase"]["string"]
 
-    # for constellation in results.values():
-    #     print(constellation)
-    #
-
-    # print(results)
     celestial_data = results
 
     logic.set_celestial_data(results)
