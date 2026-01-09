@@ -16,6 +16,7 @@ def main():
 
 @app.route("/game")
 def game():
+    print("I was called")
     if logic.chips <= 0:
         return render_template("game_over.html")
 
@@ -24,6 +25,24 @@ def game():
 @app.route("/game-over")
 def game_over():
     return render_template("game_over.html")
+
+@app.route("/api/init-game-state", methods =["POST"])
+def init_game_state():
+
+    current_location = request.get_json()
+
+    celestial_data = get_celestial_data()
+
+    url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
+    response = requests.get(url)
+    deck_data = response.json()
+
+    # return jsonify(deck_data, celestial_data)
+    return {
+        "Celestial Data" : celestial_data,
+        "Deck Data" : deck_data,
+        "Current Location": current_location
+    }
 
 
 @app.route("/reset", methods=["POST"])
@@ -74,9 +93,17 @@ def draw_cards(deck_id, count):
     cards = [(card["value"], card["suit"]) for card in data["cards"]]
     return cards
 
+@app.route("/api/sendSign", methods=["POST"])
+def send_sign():
+    data = request.get_json()
+    logic.assign_powerups(data)
+    print(data)
+    return jsonify(data)
 
-@app.route("/api/getcelestialdata")
 def get_celestial_data():
+
+    print("getting celestial data! ")
+
     app_id = os.getenv("ASTRONOMY_APP_ID")
     app_secret = os.getenv("ASTRONOMY_APP_SECRET")
 
@@ -117,10 +144,15 @@ def get_celestial_data():
         if row["entry"]["id"] == "moon":
             moon_phase = cell["extraInfo"]["phase"]["string"]
 
-    for constellation in results.values():
-        print(constellation)
+    # for constellation in results.values():
+    #     print(constellation)
+    #
 
-    print(moon_phase)
+    # print(results)
+    celestial_data = results
+
+    logic.set_celestial_data(results)
+
     return results
 
 
