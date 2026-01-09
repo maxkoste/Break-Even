@@ -97,7 +97,7 @@ def draw_cards(deck_id, count):
 
 def send_sign(data):
     print("Setting player sign!!!!!")
-    logic.player_sign(data)
+    logic.set_player_sign(data)
     return jsonify(data)
 
 def get_celestial_data():

@@ -21,8 +21,11 @@ VALUE_MAP = {
 
 BODY_POWERUPS = {
     "Moon": 1,
-    "Sun": 2,
-    "Mars": 1,
+    "Sun": 0,
+    "Mars": 5,
+    "Venus": 3,
+    "Earth": 4,
+    "Jupiter": 6
 }
 
 def populate_deck(cards):  # Take data from the API call and place the cards inside the deck.
@@ -98,12 +101,11 @@ def set_celestial_data(data):
     for body, sign in celestial_data.items():
         if sign == player_sign and body in BODY_POWERUPS:
             assign_powerups(BODY_POWERUPS[body])
-    print("Moon :", moon)
-    print("Sun :", sun)
+
     print("Player Sign:", player_sign)
 
 
-def player_sign(sign):
+def set_player_sign(sign):
     global player_sign
     selected_sign = sign["selectedSign"].strip().lower()
     player_sign = selected_sign
@@ -228,10 +230,9 @@ def next_turn(
     scores = [0, 0]
 
 
-def assign_powerups(selected_sign):  # Read celestial data and assign correct powerups
-    print("assigning powerups ", selected_sign)
-
-    powerups.append(0)
+def assign_powerups(powerup_id):  # Read celestial data and assign correct powerups
+    print("assigning powerup", powerup_id)
+    powerups.append(powerup_id)
 
 
 def draw_card_by_index(index, hand_index):
