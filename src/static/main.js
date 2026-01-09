@@ -193,10 +193,13 @@ async function initGameState(){
 
 	const bet = 50;
 
+    const select = document.getElementById("sign");
+    const selectedSign = select.value;
+
 	const gameData = await callGameApi("/api/init-game-state", {
 		method: "POST",
 		headers: {"Content-Type": "application/json"},
-		body: JSON.stringify({})
+		body: JSON.stringify({ selectedSign })
 	});
 
 	const betData = await callGameApi("/api/deal", {
@@ -204,6 +207,7 @@ async function initGameState(){
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ bet })
 	});
+
 
 	console.log(gameData);
 
@@ -223,23 +227,23 @@ async function initGameState(){
 	startGame();
 }
 
-async function sendCelestialData(){
-
-	await callGameApi("/api/getcelestialdata")
-
-    console.log("Sending data...");
-
-    const select = document.getElementById("sign");
-    const selectedSign = select.value;
-
-    console.log("Selected sign:", selectedSign);
- 
-    const data = await callGameApi("/api/sendSign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedSign })
-    });
-}
+// async function sendCelestialData(){
+//
+// 	await callGameApi("/api/getcelestialdata")
+//
+//     console.log("Sending data...");
+//
+//     const select = document.getElementById("sign");
+//     const selectedSign = select.value;
+//
+//     console.log("Selected sign:", selectedSign);
+//
+//     const data = await callGameApi("/api/sendSign", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ selectedSign })
+//     });
+// }
 
 async function hit() {
     const data = await callGameApi("/api/hit");

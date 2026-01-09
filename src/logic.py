@@ -10,6 +10,7 @@ powerups = [0, 5, 5]
 powerup_info = None
 game_started = False
 celestial_data = None
+player_sign= None
 
 VALUE_MAP = {
     "ACE": 11,
@@ -81,8 +82,24 @@ def recalculate_score(hand_index):
 def set_celestial_data(data):
     global celestial_data
     celestial_data = data
-    print("setting celestial data: \n", celestial_data)
 
+    moon = celestial_data.get("Moon").strip().lower()
+    sun = celestial_data.get("Sun").strip().lower()
+
+    print("Moon :", moon)
+    print("Sun :", sun)
+    print("Player Sign:", player_sign)
+
+    if(moon == player_sign):
+        assign_powerups(1)
+
+    if(sun == player_sign):
+        assign_powerups(2)
+
+def player_sign(sign):
+    global player_sign
+    selected_sign = sign["selectedSign"].strip().lower()
+    player_sign = selected_sign
 
 def get_score(card_value):
     if card_value in VALUE_MAP:

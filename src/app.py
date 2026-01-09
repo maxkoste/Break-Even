@@ -29,7 +29,9 @@ def game_over():
 @app.route("/api/init-game-state", methods =["POST"])
 def init_game_state():
 
-    current_location = request.get_json()
+    player_sign = request.get_json()
+
+    send_sign(player_sign)
 
     celestial_data = get_celestial_data()
 
@@ -37,11 +39,11 @@ def init_game_state():
     response = requests.get(url)
     deck_data = response.json()
 
-    # return jsonify(deck_data, celestial_data)
+    #This is the mashup api endpoint that gives the user combined data from the api:s
     return {
         "Celestial Data" : celestial_data,
         "Deck Data" : deck_data,
-        "Current Location": current_location
+        "Game State": logic.game_state()
     }
 
 
@@ -93,11 +95,9 @@ def draw_cards(deck_id, count):
     cards = [(card["value"], card["suit"]) for card in data["cards"]]
     return cards
 
-@app.route("/api/sendSign", methods=["POST"])
-def send_sign():
-    data = request.get_json()
-    logic.assign_powerups(data)
-    print(data)
+def send_sign(data):
+    print("Setting player sign!!!!!")
+    logic.player_sign(data)
     return jsonify(data)
 
 def get_celestial_data():
