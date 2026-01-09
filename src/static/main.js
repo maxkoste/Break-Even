@@ -104,6 +104,20 @@ function handleGameState(data, resetDropdown = true) {
         renderCards("dealerCards", data.dealer, hideDealerCard);
     }
 
+    // 🔹 PLAYER SCORE (alltid fullt)
+    document.getElementById("playerScore").textContent =
+        `Score: ${data.player_score}`;
+
+    // 🔹 DEALER SCORE
+    if (data.game_started && !data.game_over) {
+        const visibleScore = calculateVisibleDealerScore(data.dealer);
+        document.getElementById("dealerScore").textContent =
+            `Score: ${visibleScore}`;
+    } else {
+        document.getElementById("dealerScore").textContent =
+            `Score: ${data.dealer_score}`;
+    }
+    
     const chips = data.chips;
     const bet = extractBet(data.player);
 
@@ -308,3 +322,31 @@ function renderCards(containerId, cards, hideFirst = false) {
         });
 }
 
+function calculateVisibleDealerScore(dealerCards) {
+    if (!dealerCards || dealerCards.length === 0) return 0;
+
+    let score = 0;
+    let aces = 0;
+
+    // Hoppa över första kortet (det dolda)
+    for (let i = 1; i < dealerCards.length; i++) {
+        const [value] = dealerCards[i];
+
+        if (value === "ACE") {
+            score += 11;
+            aces++;
+        } else if (["KING", "QUEEN", "JACK"].includes(value)) {
+            score += 10;
+        } else if (value !== "JOKER") {
+            score += parseInt(value);
+        }
+    }
+
+    // Hantera ess
+    while (score > 21 && aces > 0) {
+        score -= 10;
+        aces--;
+    }
+
+    return score;
+}
