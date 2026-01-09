@@ -35,20 +35,12 @@ function handleError(err) {
   }
 }
 
-//https://api.opentopodata.org/v1/srtm90m?locations=LAT,LON
-//Link to free elevation api, elevation unlikely to be return correct without
 
 function updateBankUI(chips, bet) {
     document.getElementById("chipsDisplay").textContent = chips;
     document.getElementById("currentBetDisplay").textContent = bet;
 }
 
-// function extractBet(playerHand) {
-//     if (!Array.isArray(playerHand) || playerHand.length === 0) {
-//         return 0;
-//     }
-//     return playerHand[0];
-// }
 function extractBet(playerHand) {
     if (!Array.isArray(playerHand) || playerHand.length === 0) {
         return 0;
@@ -88,8 +80,9 @@ async function callGameApi(url, options = {}) {
 }
 
 function handleGameState(data, resetDropdown = true) {
-    document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
+	// Renders debugg information 
+    // document.getElementById("output").textContent =
+        // JSON.stringify(data, null, 0);
 
     populateModalButtonsFromArray(data.powerups);
 

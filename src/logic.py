@@ -7,7 +7,7 @@ deck = None
 hands = [[], []]
 scores = [0, 0]
 powerups = []
-powerup_info = None
+powerup_info = []
 game_started = False
 celestial_data = None
 player_sign= None
@@ -107,6 +107,12 @@ def set_celestial_data(data):
             print(f"Match found: body={body}, sign={sign}, powerup={powerup_id}")
             assign_powerups(BODY_POWERUPS[body])
             matched = True
+
+            powerup_info.append({
+                "body": body,
+                "sign": sign,
+                "powerup_id": powerup_id
+            })
 
     if not matched:
         print(f"No power up match found for player sign: {player_sign}")
