@@ -19,6 +19,12 @@ VALUE_MAP = {
     "KING": 10,
 }
 
+BODY_POWERUPS = {
+    "Moon": 1,
+    "Sun": 2,
+    "Mars": 1,
+}
+
 def populate_deck(cards):  # Take data from the API call and place the cards inside the deck.
     global deck
     deck = deque(cards)
@@ -83,18 +89,19 @@ def set_celestial_data(data):
     global celestial_data
     celestial_data = data
 
-    moon = celestial_data.get("Moon").strip().lower()
-    sun = celestial_data.get("Sun").strip().lower()
+    celestial_data = {
+        body: sign.strip().lower()
+        for body, sign in data.items()
+        if isinstance(sign, str)
+    }
 
+    for body, sign in celestial_data.items():
+        if sign == player_sign and body in BODY_POWERUPS:
+            assign_powerups(BODY_POWERUPS[body])
     print("Moon :", moon)
     print("Sun :", sun)
     print("Player Sign:", player_sign)
 
-    if(moon == player_sign):
-        assign_powerups(1)
-
-    if(sun == player_sign):
-        assign_powerups(2)
 
 def player_sign(sign):
     global player_sign
