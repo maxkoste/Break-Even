@@ -7,7 +7,7 @@ function getLocation() {
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(success, handleError);
+  return navigator.geolocation.getCurrentPosition(success, handleError);
 }
 
 function success(position) {
@@ -35,20 +35,12 @@ function handleError(err) {
   }
 }
 
-//https://api.opentopodata.org/v1/srtm90m?locations=LAT,LON
-//Link to free elevation api, elevation unlikely to be return correct without
 
 function updateBankUI(chips, bet) {
     document.getElementById("chipsDisplay").textContent = chips;
     document.getElementById("currentBetDisplay").textContent = bet;
 }
 
-// function extractBet(playerHand) {
-//     if (!Array.isArray(playerHand) || playerHand.length === 0) {
-//         return 0;
-//     }
-//     return playerHand[0];
-// }
 function extractBet(playerHand) {
     if (!Array.isArray(playerHand) || playerHand.length === 0) {
         return 0;
@@ -88,8 +80,9 @@ async function callGameApi(url, options = {}) {
 }
 
 function handleGameState(data, resetDropdown = true) {
-    document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
+	// Renders debugg information 
+    // document.getElementById("output").textContent =
+        // JSON.stringify(data, null, 0);
 
     populateModalButtonsFromArray(data.powerups);
 
@@ -159,7 +152,15 @@ function endRoundUI() {
 
 
 async function startGame() {
-    let bet = parseInt(document.getElementById("betSelect").value, 10);
+
+	let bet = 0;
+
+	try {
+		bet = parseInt(document.getElementById("betSelect").value, 10);
+	} catch (error) {
+		console.log("Value is null - setting bet to 50 for first round")
+		bet = 50;
+	}
 
 	if (!bet || bet <= 0) {
 		// discard or alert user
@@ -175,6 +176,45 @@ async function startGame() {
     handleGameState(data, false);
 }
 
+async function initGameState(){
+
+	const currentLocation = getLocation();
+
+	const currentLocationJson = JSON.stringify(currentLocation);
+
+	const bet = 50;
+
+    const select = document.getElementById("sign");
+    const selectedSign = select.value;
+
+	const gameData = await callGameApi("/api/init-game-state", {
+		method: "POST",
+		headers: {"Content-Type": "application/json"},
+		body: JSON.stringify({ selectedSign })
+	});
+
+	const betData = await callGameApi("/api/deal", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ bet })
+	});
+
+
+	localStorage.setItem("gameData", JSON.stringify(gameData));
+
+	window.location.href="/game";
+
+	const savedDataString = localStorage.getItem("gameData");
+
+	if (savedDataString) {
+		// const savedData = JSON.parse(savedDataString);
+		console.log(savedDataString);
+	} else{
+		console.log("No saved data :( ")
+	}
+
+	startGame();
+}
 
 async function hit() {
     const data = await callGameApi("/api/hit");

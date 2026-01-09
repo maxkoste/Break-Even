@@ -6,9 +6,11 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = [0, 5, 5]
-powerup_info = None
+powerups = []
+powerup_info = []
 game_started = False
+celestial_data = None
+player_sign= None
 
 VALUE_MAP = {
     "ACE": 11,
@@ -17,13 +19,17 @@ VALUE_MAP = {
     "KING": 10,
 }
 
-def populate_deck(cards):
-    """
-    Populates the game deck using card data from the API.
+#int corresponds to the case in the method use_powerup()
+BODY_POWERUPS = {
+    "Moon": 1,
+    "Sun": 0,
+    "Mars": 5,
+    "Venus": 3,
+    "Earth": 4,
+    "Jupiter": 6
+}
 
-    Arg:
-        cards (list[tuple]): List of cards as (value, suit).
-    """
+def populate_deck(cards):  # Take data from the API call and place the cards inside the deck.
     global deck
     deck = deque(cards)
 
@@ -108,6 +114,42 @@ def recalculate_score(hand_index):
 
     scores[hand_index] = score
 
+def set_celestial_data(data):
+    global celestial_data
+    celestial_data = data
+
+    celestial_data = {
+        body: sign.strip().lower()
+        for body, sign in data.items()
+        if isinstance(sign, str)
+    }
+
+    matched = False
+
+    for body, sign in celestial_data.items():
+        if sign == player_sign and body in BODY_POWERUPS:
+            powerup_id = BODY_POWERUPS.get(body)
+            print(f"Match found: body={body}, sign={sign}, powerup={powerup_id}")
+            assign_powerups(BODY_POWERUPS[body])
+            matched = True
+
+            powerup_info.append({
+                "Planet": body,
+                "Player Sign": sign,
+                "powerup_id": powerup_id
+            })
+
+    if not matched:
+        print(f"No power up match found for player sign: {player_sign}")
+        powerup_info.append({
+            "Player Sign" : player_sign
+        })
+
+
+def set_player_sign(sign):
+    global player_sign
+    selected_sign = sign["selectedSign"].strip().lower()
+    player_sign = selected_sign
 
 def get_score(card_value):
     """
@@ -168,7 +210,8 @@ def reset_game():
     chips = 200
     hands = [[], []]
     scores = [0, 0]
-    powerups = [0, 5, 5]
+    powerups = []
+    powerup_info = []
     game_started = False
 
 def split():  # Place one of player's cards into a new hand.
@@ -284,8 +327,9 @@ def next_turn(winner):
     scores = [0, 0]
 
 
-def assign_powerups(player_data):  # Read celestial data and assign correct powerups
-    powerups.append(0)
+def assign_powerups(powerup_id):  # Read celestial data and assign correct powerups
+    print("assigning powerup", powerup_id)
+    powerups.append(powerup_id)
 
 
 def draw_card_by_index(index, hand_index):

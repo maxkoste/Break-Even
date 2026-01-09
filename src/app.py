@@ -36,6 +36,26 @@ def game_over():
     """
     return render_template("game_over.html")
 
+@app.route("/api/init-game-state", methods =["POST"])
+def init_game_state():
+
+    player_sign = request.get_json()
+
+    send_sign(player_sign)
+
+    celestial_data = get_celestial_data()
+
+    url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
+    response = requests.get(url)
+    deck_data = response.json()
+
+    #This is the mashup api endpoint that gives the user combined data from the api:s
+    return {
+        "Celestial Data" : celestial_data,
+        "Deck Data" : deck_data,
+        "Game State": logic.game_state()
+    }
+
 
 @app.route("/reset", methods=["POST"])
 def reset():
@@ -111,15 +131,12 @@ def draw_cards(deck_id, count):
     cards = [(card["value"], card["suit"]) for card in data["cards"]]
     return cards
 
+def send_sign(data):
+    logic.set_player_sign(data)
+    return jsonify(data)
 
-@app.route("/api/getcelestialdata")
 def get_celestial_data():
-    """
-    Fetches celestial body position data from the Astronomy API.
 
-    Returns:
-        dict: A mapping of celestial bodies to their constellations.
-    """
     app_id = os.getenv("ASTRONOMY_APP_ID")
     app_secret = os.getenv("ASTRONOMY_APP_SECRET")
 
@@ -129,7 +146,6 @@ def get_celestial_data():
 
     today = datetime.now().strftime("%Y-%m-%d")
     current_time = datetime.now().strftime("%H:%M:%S")
-    print(today, current_time)
 
     params = {
         "latitude": "55.6050",
@@ -160,10 +176,10 @@ def get_celestial_data():
         if row["entry"]["id"] == "moon":
             moon_phase = cell["extraInfo"]["phase"]["string"]
 
-    for constellation in results.values():
-        print(constellation)
+    celestial_data = results
 
-    print(moon_phase)
+    logic.set_celestial_data(results)
+
     return results
 
 
