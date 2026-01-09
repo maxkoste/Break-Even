@@ -99,13 +99,17 @@ def set_celestial_data(data):
         if isinstance(sign, str)
     }
 
+    matched = False
+
     for body, sign in celestial_data.items():
         if sign == player_sign and body in BODY_POWERUPS:
             powerup_id = BODY_POWERUPS.get(body)
             print(f"Match found: body={body}, sign={sign}, powerup={powerup_id}")
             assign_powerups(BODY_POWERUPS[body])
+            matched = True
 
-    print("Player Sign:", player_sign)
+    if not matched:
+        print(f"No power up match found for player sign: {player_sign}")
 
 
 def set_player_sign(sign):
