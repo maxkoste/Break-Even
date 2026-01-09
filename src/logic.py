@@ -7,7 +7,7 @@ deck = None
 hands = [[], []]
 scores = [0, 0]
 powerups = []
-powerup_info = None
+powerup_info = []
 game_started = False
 celestial_data = None
 player_sign= None
@@ -108,8 +108,17 @@ def set_celestial_data(data):
             assign_powerups(BODY_POWERUPS[body])
             matched = True
 
+            powerup_info.append({
+                "Planet": body,
+                "Player Sign": sign,
+                "powerup_id": powerup_id
+            })
+
     if not matched:
         print(f"No power up match found for player sign: {player_sign}")
+        powerup_info.append({
+            "Player Sign" : player_sign
+        })
 
 
 def set_player_sign(sign):
@@ -150,7 +159,8 @@ def reset_game():
     chips = 200
     hands = [[], []]
     scores = [0, 0]
-    powerups = [0, 5, 5]
+    powerups = []
+    powerup_info = []
     game_started = False
 
 def split():  # Place one of player's cards into a new hand.
