@@ -1,5 +1,6 @@
 const x = document.getElementById("demo");
 const betStep = 50;
+let dealerFirstCardRevealed = false;
 
 /**
  * Requests the user's current geographic location.
@@ -206,6 +207,7 @@ function endRoundUI() {
  * Starts a new game round by placing a bet and dealing cards.
  */
 async function startGame() {
+    dealerFirstCardRevealed = false;
 
 	let bet = 0;
 
@@ -239,8 +241,6 @@ async function initGameState(){
 
 	const currentLocationJson = JSON.stringify(currentLocation);
 
-	const bet = 50;
-
     const select = document.getElementById("sign");
     const selectedSign = select.value;
 
@@ -249,13 +249,6 @@ async function initGameState(){
 		headers: {"Content-Type": "application/json"},
 		body: JSON.stringify({ selectedSign })
 	});
-
-	const betData = await callGameApi("/api/deal", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ bet })
-	});
-
 
 	localStorage.setItem("gameData", JSON.stringify(gameData));
 
@@ -269,8 +262,6 @@ async function initGameState(){
 	} else{
 		console.log("No saved data :( ")
 	}
-
-	startGame();
 }
 
 /**
@@ -308,6 +299,10 @@ function populateModalButtonsFromArray(numbers) {
         btn.textContent = num;
 
         btn.onclick = () => {
+            const modalEl = document.getElementById("exampleModal");
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.hide();          // This will trigger the fade out animation
+            
             usePowerUp(num)
         };
 
@@ -326,6 +321,18 @@ async function usePowerUp(num) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ num })
     });
+
+    switch (num) {
+        case 0:
+            powerup0(data)
+            break;
+        case 1:
+            powerup1(data);
+            break;
+        default:
+            console.log("Fix this powerup: " + num)
+    }
+
     handleGameState(data);
 }
 
@@ -398,6 +405,17 @@ const CARD_IMAGES = {
     }
 };
 
+function getCardImageSrc(value, suit) {
+    if (suit === "BLACK" || suit === "RED") suit = "JOKER";
+
+    if (value === "JACK") value = "J";
+    else if (value === "QUEEN") value = "Q";
+    else if (value === "KING") value = "K";
+    else value = value.toString();
+
+    return CARD_IMAGES[suit][value];
+}
+
 /**
  * Renders playing cards in a given container.
  *
@@ -420,22 +438,14 @@ function renderCards(containerId, cards, hideFirst = false) {
             img.loading = "eager";
 
             // Hide dealer's first card
-            if (hideFirst && index === 0) {
+            if (hideFirst && index === 0 && !dealerFirstCardRevealed) {
                 img.src = CARD_IMAGES.BACKGROUND.BACKGROUND;
                 img.alt = "Face-down card";
                 container.appendChild(img);
                 return;
             }
 
-            if (suit === "BLACK" || suit === "RED") suit = "JOKER";
-
-            if (value === "ACE") value = "ACE";
-            else if (value === "JACK") value = "J";
-            else if (value === "QUEEN") value = "Q";
-            else if (value === "KING") value = "K";
-            else value = value.toString();
-
-            img.src = CARD_IMAGES[suit][value];
+            img.src = getCardImageSrc(value, suit);
             img.alt = `${value} of ${suit}`;
 
             container.appendChild(img);
@@ -454,8 +464,7 @@ function calculateVisibleDealerScore(dealerCards) {
     let score = 0;
     let aces = 0;
 
-    // Hoppa över första kortet (det dolda)
-    for (let i = 1; i < dealerCards.length; i++) {
+    for (let i = dealerFirstCardRevealed ? 0 : 1; i < dealerCards.length; i++) {
         const [value] = dealerCards[i];
 
         if (value === "ACE") {
@@ -475,4 +484,64 @@ function calculateVisibleDealerScore(dealerCards) {
     }
 
     return score;
+}
+
+function powerup0(data) {
+    const [value, suit] = data.powerup_info;
+
+    const dealerCardsContainer = document.getElementById("dealerCards");
+
+    const firstCard = dealerCardsContainer.querySelector("img");
+
+    if (firstCard) {
+        firstCard.src = getCardImageSrc(value, suit);
+        firstCard.alt = `${value} of ${suit}`;
+        dealerFirstCardRevealed = true;
+    }
+
+    if (data.dealer && data.dealer.length > 0) {
+        const dealerScore = data.dealer_score;
+        document.getElementById("dealerScore").textContent = `Score: ${dealerScore}`;
+    }
+}
+
+function powerup1(data) {
+    const overlay = document.getElementById("displayOverlay");
+    const content = document.getElementById("displayContent");
+
+    content.innerHTML = "";
+    overlay.classList.remove("hidden");
+
+    const [value, suit] = data.powerup_info;
+
+    const peekImg = document.createElement("img");
+    peekImg.className = "card";
+    peekImg.src = getCardImageSrc(value, suit);
+    peekImg.onclick = () => draw_card_by_index(0);
+
+    const backImg = document.createElement("img");
+    backImg.className = "card";
+    backImg.src = CARD_IMAGES.BACKGROUND.BACKGROUND;
+    backImg.onclick = () => draw_card_by_index(1);
+
+    content.appendChild(peekImg);
+    content.appendChild(backImg);
+}
+
+async function draw_card_by_index(index) {
+    const overlay = document.getElementById("displayOverlay");
+    const content = document.getElementById("displayContent");
+
+    content.innerHTML = "";
+
+    const data = await callGameApi("/api/draw_card_by_index", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            index: index
+        })
+    });
+
+    overlay.classList.add("hidden");
+    handleGameState(data);
 }

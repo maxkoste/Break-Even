@@ -6,7 +6,7 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = []
+powerups = [1, 1, 1]
 powerup_info = []
 game_started = False
 celestial_data = None
@@ -34,6 +34,8 @@ def populate_deck(cards):  # Take data from the API call and place the cards ins
     global deck
     deck = deque(cards)
 
+def deck_ready():
+    return bool(deck)
 
 def start_game():
     """
@@ -140,17 +142,8 @@ def set_celestial_data(data):
             assign_powerups(BODY_POWERUPS[body])
             matched = True
 
-            powerup_info.append({
-                "Planet": body,
-                "Player Sign": sign,
-                "powerup_id": powerup_id
-            })
-
     if not matched:
         print(f"No power up match found for player sign: {player_sign}")
-        powerup_info.append({
-            "Player Sign" : player_sign
-        })
 
 
 def set_player_sign(sign):
@@ -361,18 +354,16 @@ def assign_powerups(powerup_id):  # Read celestial data and assign correct power
     powerups.append(powerup_id)
 
 
-def draw_card_by_index(index, hand_index):
+def rotate_deck(index):
     """
-    Draws a card from a specific positions in the deck into the given hand.
+    Rotates deck to a specific position.
 
     Rotates the deck so that the card at the specified index is drawn next.
 
     Args:
-        index (int): The position in the deck of the card to draw.
-        hand_index (int): Index of the hand to receive the card (0 = dealer, 1 = player).
+        index (int): The position in the deck.
     """
     deck.rotate(-index)
-    draw_card(hand_index)
 
 
 def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
@@ -400,9 +391,8 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
         case 0:  # Sun Major, show hidden dealer card.
             powerup_info = hands[0][0]
         case 1:  # Moon Major, look at the next card, draw it or the one after.
-            return deck[0], deck[
-                1
-            ]  # Helper method called after user picks, use deck.rotate
+            powerup_info = deck[0]
+         # Helper method called after user picks, use deck.rotate
         case 2:  # Mercury Major,
             pass
             # resets turn
