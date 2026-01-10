@@ -220,9 +220,8 @@ def use_powerup():
     """
     data = request.get_json()
     powerup = data.get("num")
-    logic.use_powerup(powerup)
-
-    return jsonify(logic.game_state())
+    
+    return jsonify(logic.use_powerup(powerup))
 
 @app.route("/api/draw_card_by_index", methods=["POST"])
 def draw_card_by_index():

@@ -6,7 +6,7 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = [1, 1, 1]
+powerups = [1, 1, 1, 2, 2]
 powerup_info = []
 game_started = False
 celestial_data = None
@@ -384,17 +384,22 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
         Optional[any]: Some power-ups return additional info
         (e.g., a card or count), others return None.
     """
-    global powerup_info, scores
+    global powerup_info, scores, chips
     powerups.remove(powerup_index)
 
     match powerup_index:
         case 0:  # Sun Major, show hidden dealer card.
             powerup_info = hands[0][0]
+            return game_state()
         case 1:  # Moon Major, look at the next card, draw it or the one after.
             powerup_info = deck[0]
+            return game_state()
          # Helper method called after user picks, use deck.rotate
         case 2:  # Mercury Major,
-            pass
+            scores = [0, 0]
+            winner = game_over()
+            next_turn(winner)
+            return game_state(winner, game_over=True)
             # resets turn
         case 3:  # Venus Major, increase bet by 1.5x for each heart in hand.
             return sum(
