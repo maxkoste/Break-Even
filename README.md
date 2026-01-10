@@ -53,14 +53,30 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 
 ### Instructions
 
-- Running the server:
+**Install instructions**
+1. Clone the repository with git or download the zip file from GitHub:
+git clone https://github.com/Love335/BreakEven.git
 
-```
-source .venv/bin/activate
+If you download the zip file, unpack it on your computer.
 
-//for automatic refresh of the server each time you make changes and save the  python code:
-flask --debug --app src/app run
+2. Create and activate a Python virtual environment:
+python -m venv .venv
+source .venv/bin/activate (macOS/Linux)
+.venv\Scripts\activate (Windows)
 
-//without automatic refresh
-flask --app src/app run
-```
+3. Install dependencies:
+pip install -r requirements.txt
+
+4. Create a .env file in the project root with your API keys. Example:
+ASTRONOMY_APP_ID = your_astronomy_app_id
+ASTRONOMY_APP_SECRET = your_astronomy_app_secret
+Note: the .env file should not be uploaded to GitHub or shared publicly.
+
+**Running the Game**
+1. Activate the Python environment (if not already active).
+
+2. Start the backend server:
+flask --debug --app src/app run (with automatic reload)
+flask --app src/app run (without automatic reload)
+
+3. Open your web browser and go to http://localhost:5000/
