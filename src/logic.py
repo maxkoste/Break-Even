@@ -1,7 +1,7 @@
 from collections import deque
 import random
 
-chips = 200
+chips = 250
 deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
@@ -213,7 +213,7 @@ def reset_game():
     and marks the game as not started
     """
     global chips, hands, scores, game_started, powerups
-    chips = 200
+    chips = 250
     hands = [[], []]
     scores = [0, 0]
     powerups = []

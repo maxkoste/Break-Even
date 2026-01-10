@@ -53,6 +53,9 @@ def init_game_state():
     cards = draw_cards(deck_id, 324)
     logic.populate_deck(cards)
 
+    logic.bet(50)
+    logic.start_game()
+
     #This is the mashup api endpoint that gives the user combined data from the api:s
     return {
         "Celestial Data" : celestial_data,

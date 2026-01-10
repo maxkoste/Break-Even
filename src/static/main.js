@@ -252,8 +252,6 @@ async function initGameState(){
 
 	localStorage.setItem("gameData", JSON.stringify(gameData));
 
-	window.location.href="/game";
-
 	const savedDataString = localStorage.getItem("gameData");
 
 	if (savedDataString) {
@@ -262,6 +260,8 @@ async function initGameState(){
 	} else{
 		console.log("No saved data :( ")
 	}
+
+    window.location.href="/game";
 }
 
 /**
