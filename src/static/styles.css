@@ -84,3 +84,34 @@ h1 {
     font-weight: bold;
     margin-bottom: 8px;
 }
+
+#cardDisplay {
+    position: relative;
+    z-index: 1;
+}
+
+#displayOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    pointer-events: auto;
+}
+
+#displayOverlay.hidden {
+    display: none;
+    pointer-events: none;
+}
+
+#displayContent {
+    display: flex;
+    gap: 20px;
+    pointer-events: auto;
+}
+
+#displayContent img.card {
+    cursor: pointer;
+}

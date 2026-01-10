@@ -45,19 +45,18 @@ def init_game_state():
     and returns the initial game state as a mashup response.
     """
     player_sign = request.get_json()
-
-    send_sign(player_sign)
+    logic.set_player_sign(player_sign)
 
     celestial_data = get_celestial_data()
 
-    url = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6&jokers_enabled=true"
-    response = requests.get(url)
-    deck_data = response.json()
+    deck_id = new_blackjack_deck()
+    cards = draw_cards(deck_id, 324)
+    logic.populate_deck(cards)
 
     #This is the mashup api endpoint that gives the user combined data from the api:s
     return {
         "Celestial Data" : celestial_data,
-        "Deck Data" : deck_data,
+        "Deck Ready": True,
         "Game State": logic.game_state()
     }
 
@@ -93,15 +92,10 @@ def deal():
     if not isinstance(bet, int) or bet <= 0:
         return jsonify({"error": "Invalid bet"}), 400
 
-    # Om det är nytt spel efter game-over, resetta game state
-    if logic.chips <= 0:
-        logic.reset_game()
+    if not logic.deck_ready():
+        return jsonify({"error": "Deck not initialized"}), 400
 
-    deck_id = new_blackjack_deck()
-    cards = draw_cards(deck_id, 324)
     logic.bet(bet)
-    logic.populate_deck(cards)
-
     return jsonify(logic.start_game())
 
 
@@ -135,16 +129,6 @@ def draw_cards(deck_id, count):
     data = response.json()
     cards = [(card["value"], card["suit"]) for card in data["cards"]]
     return cards
-
-def send_sign(data):
-    """
-    Stores the player's zodiac sign in the game logic.
-
-    Args:
-        data (dict): JSON data containing the player's selected sign.
-    """
-    logic.set_player_sign(data)
-    return jsonify(data)
 
 def get_celestial_data():
     """
@@ -239,6 +223,15 @@ def use_powerup():
     logic.use_powerup(powerup)
 
     return jsonify(logic.game_state())
+
+@app.route("/api/draw_card_by_index", methods=["POST"])
+def draw_card_by_index():
+    data = request.get_json()
+    index = data.get("index")
+    logic.rotate_deck(index)
+
+    return hit()
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
