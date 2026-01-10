@@ -1,6 +1,12 @@
 const x = document.getElementById("demo");
 const betStep = 50;
 
+/**
+ * Requests the user's current geographic location.
+ * Displays an error message if geolocation is not supported.
+ *
+ * @returns {void}
+ */
 function getLocation() {
   if (!navigator.geolocation) {
     x.textContent = "Geolocation is not supported by this browser.";
@@ -10,6 +16,11 @@ function getLocation() {
   return navigator.geolocation.getCurrentPosition(success, handleError);
 }
 
+/**
+ * Handles a successful geolocation request.
+ *
+ * @param {GeolocationPosition} position - The user's current position.
+ */
 function success(position) {
   const { latitude, longitude, altitude } = position.coords;
 
@@ -19,6 +30,11 @@ function success(position) {
     `Altitude: ${altitude ?? "Not available"}`;
 }
 
+/**
+ * Handles errors from the geolocation API.
+ *
+ * @param {GeolocationPositionError} err - The error object.
+ */
 function handleError(err) {
   switch (err.code) {
     case err.PERMISSION_DENIED:
@@ -35,12 +51,23 @@ function handleError(err) {
   }
 }
 
-
+/**
+ * Updates the displayed chip count and current bet.
+ *
+ * @param {number} chips - The player's total chips.
+ * @param {number} bet - The current bet amount.
+ */
 function updateBankUI(chips, bet) {
     document.getElementById("chipsDisplay").textContent = chips;
     document.getElementById("currentBetDisplay").textContent = bet;
 }
 
+/**
+ * Extracts the bet amount from the player's hand.
+ *
+ * @param {Array} playerHand - The player's hand including bet entries.
+ * @returns {number} The bet amount or 0 if none exists.
+ */
 function extractBet(playerHand) {
     if (!Array.isArray(playerHand) || playerHand.length === 0) {
         return 0;
@@ -50,6 +77,12 @@ function extractBet(playerHand) {
     return betEntry ? betEntry[0] : 0;
 }
 
+/**
+ * Populates the bet dropdown based on available chips.
+ *
+ * @param {number} chips - The player's available chips.
+ * @param {number|null} selectedBet - The currently selected bet.
+ */
 function populateBetDropdown(chips, selectedBet = null) {
     const select = document.getElementById("betSelect");
     select.innerHTML = "";
@@ -74,11 +107,24 @@ function populateBetDropdown(chips, selectedBet = null) {
     }
 }
 
+/**
+ * Calls a backend API endpoint and returns the JSON response.
+ *
+ * @param {string} url - The API endpoint.
+ * @param {Object} options - Fetch options.
+ * @returns {Promise<Object>} The parsed JSON response.
+ */
 async function callGameApi(url, options = {}) {
     const response = await fetch(url, options);
     return await response.json();
 }
 
+/**
+ * Updates the game UI based on the current game state.
+ *
+ * @param {Object} data - The game state returned from the backend.
+ * @param {boolean} resetDropdown - Whether to reset the bet dropdown.
+ */
 function handleGameState(data, resetDropdown = true) {
 	// Renders debugg information 
     // document.getElementById("output").textContent =
@@ -133,12 +179,18 @@ function handleGameState(data, resetDropdown = true) {
     }
 }
 
+/**
+ * Updates the UI for an active round.
+ */
 function inRoundUI() {
     document.getElementById("startBtn").style.display = "none";
     document.getElementById("controls").style.display = "block";
     document.getElementById("betting").style.display = "none";
 }
 
+/**
+ * Updates the UI when a round has ended.
+ */
 function endRoundUI() {
     document.getElementById("controls").style.display = "none";
 
@@ -150,7 +202,9 @@ function endRoundUI() {
     document.getElementById("betting").style.display = "block";
 }
 
-
+/**
+ * Starts a new game round by placing a bet and dealing cards.
+ */
 async function startGame() {
 
 	let bet = 0;
@@ -176,6 +230,9 @@ async function startGame() {
     handleGameState(data, false);
 }
 
+/**
+ * Initializes the game by sending player data and fetching mashup API data.
+ */
 async function initGameState(){
 
 	const currentLocation = getLocation();
@@ -216,16 +273,27 @@ async function initGameState(){
 	startGame();
 }
 
+/**
+ * Requests a hit action from the backend.
+ */
 async function hit() {
     const data = await callGameApi("/api/hit");
     handleGameState(data);
 }
 
+/**
+ * Requests a stand action from the backend.
+ */
 async function stand() {
     const data = await callGameApi("/api/stand");
     handleGameState(data);
 }
 
+/**
+ * Creates buttons for available power-ups.
+ *
+ * @param {number[]} numbers - List of available power-up IDs.
+ */
 function populateModalButtonsFromArray(numbers) {
     const container = document.getElementById("modalButtons");
     container.innerHTML = "";
@@ -247,6 +315,11 @@ function populateModalButtonsFromArray(numbers) {
     });
 }
 
+/**
+ * Uses a selected power-up.
+ *
+ * @param {number} num - The power-up ID.
+ */
 async function usePowerUp(num) {
     const data = await callGameApi("/api/use_powerup", {
         method: "POST",
@@ -325,6 +398,13 @@ const CARD_IMAGES = {
     }
 };
 
+/**
+ * Renders playing cards in a given container.
+ *
+ * @param {string} containerId - The DOM container ID.
+ * @param {Array} cards - List of cards to render.
+ * @param {boolean} hideFirst - Whether to hide the first card.
+ */
 function renderCards(containerId, cards, hideFirst = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -362,6 +442,12 @@ function renderCards(containerId, cards, hideFirst = false) {
         });
 }
 
+/**
+ * Calculates the dealer's visible score (excluding hidden card).
+ *
+ * @param {Array} dealerCards - The dealer's cards.
+ * @returns {number} The visible score.
+ */
 function calculateVisibleDealerScore(dealerCards) {
     if (!dealerCards || dealerCards.length === 0) return 0;
 
