@@ -38,7 +38,12 @@ def game_over():
 
 @app.route("/api/init-game-state", methods =["POST"])
 def init_game_state():
+    """
+    Initializes the game state by combining data from multiple APIs.
 
+    Stores the player's sign, fetches celestial data, creates a new card deck,
+    and returns the initial game state as a mashup response.
+    """
     player_sign = request.get_json()
 
     send_sign(player_sign)
@@ -132,11 +137,21 @@ def draw_cards(deck_id, count):
     return cards
 
 def send_sign(data):
+    """
+    Stores the player's zodiac sign in the game logic.
+
+    Args:
+        data (dict): JSON data containing the player's selected sign.
+    """
     logic.set_player_sign(data)
     return jsonify(data)
 
 def get_celestial_data():
+    """
+    Fetches celestial body positions from the Astronomy API.
 
+    Retrieves current constellation data and stores it in the game logic.
+    """
     app_id = os.getenv("ASTRONOMY_APP_ID")
     app_secret = os.getenv("ASTRONOMY_APP_SECRET")
 

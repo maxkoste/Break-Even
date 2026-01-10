@@ -30,6 +30,7 @@ BODY_POWERUPS = {
 }
 
 def populate_deck(cards):  # Take data from the API call and place the cards inside the deck.
+    """Initializes the deck with cards fetched from the API."""
     global deck
     deck = deque(cards)
 
@@ -115,6 +116,12 @@ def recalculate_score(hand_index):
     scores[hand_index] = score
 
 def set_celestial_data(data):
+    """
+    Processes celestial data and assigns power-ups based on the player's zodiac sign.
+
+    Args:
+        data (dict): Mapping of celestial bodies to constellation names.
+    """
     global celestial_data
     celestial_data = data
 
@@ -147,6 +154,12 @@ def set_celestial_data(data):
 
 
 def set_player_sign(sign):
+    """
+    Stores the player's selected zodiac sign.
+
+    Args:
+        sign (dict): JSON data containing the selected zodiac sign.
+    """
     global player_sign
     selected_sign = sign["selectedSign"].strip().lower()
     player_sign = selected_sign
@@ -219,6 +232,16 @@ def split():  # Place one of player's cards into a new hand.
 
 
 def double_down(bet_amount, hand_index=0):
+    """
+    Doubles the bet for a hand and draws exactly one card.
+
+    Args:
+        bet_amount (int): The additional amount to bet.
+        hand_index (int, optional): The index of the hand to double down. Defaults to 0.
+
+    Returns:
+        str: Result message or error if not enough chips.
+    """
     # Use the bet() function to place the extra bet
     bet_result = bet(bet_amount, hand_index)
     if "Not enough chips" in bet_result:
@@ -328,6 +351,12 @@ def next_turn(winner):
 
 
 def assign_powerups(powerup_id):  # Read celestial data and assign correct powerups
+    """
+    Assigns a power-up to the player by adding it to the powerups list.
+
+    Args:
+        powerup_id (int): The ID of the power-up to assign.
+    """
     print("assigning powerup", powerup_id)
     powerups.append(powerup_id)
 
@@ -347,6 +376,23 @@ def draw_card_by_index(index, hand_index):
 
 
 def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
+    """
+    Applies a selected power-up to the current game state.
+
+    The effect depends on the power-up index:
+    - 0-10: Major power-ups
+    - 11-21: Minor power-ups
+
+    Some power-ups may return values such as cards or counts
+    depending on their effect.
+
+    Args:
+        powerup_index (int): The index of the power-up to use.
+
+    Returns:
+        Optional[any]: Some power-ups return additional info
+        (e.g., a card or count), others return None.
+    """
     global powerup_info, scores
     powerups.remove(powerup_index)
 
