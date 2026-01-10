@@ -41,12 +41,7 @@
 	</section>
 
 	<!-- Player Cards -->
-	<section id="playerSection">
-		<h2>Player</h2>
-        <div id="playerScore" class="score"></div>
-		<div id="playerCards" class="cards-container">
-			<!-- Player cards will be injected here -->
-		</div>
+	<section id="playerHandsContainer">
 	</section>
 
     <!-- Card Display -->
@@ -58,9 +53,6 @@
 
     <!-- Game Control Buttons -->
     <section id="controls" style="display: none;">
-        <button class="deck-button" onclick="hit()">Hit</button>
-        <button class="deck-button" onclick="stand()">Stand</button>
-
         <!-- Button trigger modal -->
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
         Launch demo modal
@@ -96,9 +88,11 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const data = await callGameApi("/api/state");
 
+            const currentBet = extractBet(data.player);
+
             handleGameState(data, false);
             populateBetDropdown(data.chips);
-            updateBankUI(data.chips, 50);
+            updateBankUI(data.chips, currentBet);
         });
     </script>
 </body>

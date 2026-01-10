@@ -126,38 +126,83 @@ async function callGameApi(url, options = {}) {
  * @param {Object} data - The game state returned from the backend.
  * @param {boolean} resetDropdown - Whether to reset the bet dropdown.
  */
-function handleGameState(data, resetDropdown = true) {
-	// Renders debugg information 
-    // document.getElementById("output").textContent =
-        // JSON.stringify(data, null, 0);
+function debug(data) {
+    const el = document.getElementById("output");
+    if (el) el.textContent = JSON.stringify(data, null, 2);
+}
 
-    populateModalButtonsFromArray(data.powerups);
+function powerupsModal(powerups) {
+    populateModalButtonsFromArray(powerups);
+}
 
-    if (data.player) {
-        renderCards("playerCards", data.player);
+function dealerCards(dealer, gameStarted, gameOver) {
+    if (dealer) {
+        const hideDealerCard = gameStarted && !gameOver;
+        renderCards("dealerCards", dealer, hideDealerCard);
+    }
+}
+
+function scores(data) {
+    const dealerScoreEl = document.getElementById("dealerScore");
+
+    if (Array.isArray(data.player_hands)) {
+        data.player_hands.forEach((hand, index) => {
+            const el = document.getElementById(`playerScore-${index}`);
+            if (el) {
+                const score = calculateHandScore(hand);
+                el.textContent = `Score: ${score}`;
+            }
+        });
+    } else if (Array.isArray(data.player)) {
+        const el = document.getElementById("playerScore-0");
+        if (el) {
+            const score = calculateHandScore(data.player);
+            el.textContent = `Score: ${score}`;
+        }
     }
 
-    if (data.dealer) {
-        const hideDealerCard =
-            data.game_started && !data.game_over;
-
-        renderCards("dealerCards", data.dealer, hideDealerCard);
+    if (dealerScoreEl) {
+        if (data.game_started && !data.game_over) {
+            const visibleScore = calculateVisibleDealerScore(data.dealer);
+            dealerScoreEl.textContent = `Score: ${visibleScore}`;
+        } else {
+            dealerScoreEl.textContent = `Score: ${data.dealer_score}`;
+        }
     }
+}
 
-    // 🔹 PLAYER SCORE (alltid fullt)
-    document.getElementById("playerScore").textContent =
-        `Score: ${data.player_score}`;
-
-    // 🔹 DEALER SCORE
-    if (data.game_started && !data.game_over) {
-        const visibleScore = calculateVisibleDealerScore(data.dealer);
-        document.getElementById("dealerScore").textContent =
-            `Score: ${visibleScore}`;
-    } else {
-        document.getElementById("dealerScore").textContent =
-            `Score: ${data.dealer_score}`;
-    }
+function playerHands(data) {
+    const container = document.getElementById("playerHandsContainer");
+    if (!container) return;
     
+    container.innerHTML = "";
+    const handsToRender = data.player_hands || (data.player ? [data.player] : []);
+    
+    handsToRender.forEach((hand, index) => {
+        const isActive = data.player_hands ? (index === data.active_hand_index) : true;
+        const handDiv = document.createElement("div");
+        handDiv.className = `hand-section ${isActive ? 'active-hand' : 'inactive-hand'}`;
+        const handScore = calculateHandScore(hand);
+        
+        handDiv.innerHTML = `
+            <h3>Hand ${index + 1}</h3>
+            <div id="playerScore-${index}" class="score">Score: ${handScore}</div>
+            <div id="card-${index}" class="cards-container"></div>
+            <div class="hand-controls">
+                ${isActive && data.game_started && !data.game_over ? `
+                    <button class="deck-button" onclick="hit()">Hit</button>
+                    <button class="deck-button" onclick="stand()">Stand</button>
+                    <button class="deck-button" onclick="split()">Split</button>
+                ` : ''}
+            </div>
+        `;
+        
+        container.appendChild(handDiv);
+        renderCards(`card-${index}`, hand);
+    });
+}
+
+function bets(data, resetDropdown) {
     const chips = data.chips;
     const bet = extractBet(data.player);
 
@@ -166,18 +211,30 @@ function handleGameState(data, resetDropdown = true) {
     }
 
     updateBankUI(chips, bet);
+}
 
+function handleRoundState(data) {
     if (!data.game_started) return;
-    else if (data.game_over) {
+
+    if (data.game_over) {
         if (data.chips <= 0) {
-            // Spelaren har inga chips kvar → redirect till game-over-sidan
             window.location.href = "/game-over";
         } else {
-            endRoundUI(); // vanlig runda slut
+            endRoundUI();
         }
     } else {
         inRoundUI();
     }
+}
+
+function handleGameState(data, resetDropdown = true) {
+    debug(data);
+    powerupsModal(data.powerups);
+    dealerCards(data.dealer, data.game_started, data.game_over);
+    scores(data);
+    playerHands(data);
+    bets(data, resetDropdown);
+    handleRoundState(data);
 }
 
 /**
@@ -223,12 +280,6 @@ async function startGame() {
 		console.log("No valid bet selected, setting it to 50");
 		bet = 50;
 	}
-    const data = await callGameApi("/api/deal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bet })
-    });
-
     handleGameState(data, false);
 }
 
@@ -278,6 +329,15 @@ async function hit() {
 async function stand() {
     const data = await callGameApi("/api/stand");
     handleGameState(data);
+}
+
+async function split() {
+    const data = await callGameApi("/api/split", { method: "POST" });
+    if (data.error) {
+        alert(data.error); 
+    } else {
+        handleGameState(data);
+    }
 }
 
 /**
@@ -452,40 +512,6 @@ function renderCards(containerId, cards, hideFirst = false) {
         });
 }
 
-/**
- * Calculates the dealer's visible score (excluding hidden card).
- *
- * @param {Array} dealerCards - The dealer's cards.
- * @returns {number} The visible score.
- */
-function calculateVisibleDealerScore(dealerCards) {
-    if (!dealerCards || dealerCards.length === 0) return 0;
-
-    let score = 0;
-    let aces = 0;
-
-    for (let i = dealerFirstCardRevealed ? 0 : 1; i < dealerCards.length; i++) {
-        const [value] = dealerCards[i];
-
-        if (value === "ACE") {
-            score += 11;
-            aces++;
-        } else if (["KING", "QUEEN", "JACK"].includes(value)) {
-            score += 10;
-        } else if (value !== "JOKER") {
-            score += parseInt(value);
-        }
-    }
-
-    // Hantera ess
-    while (score > 21 && aces > 0) {
-        score -= 10;
-        aces--;
-    }
-
-    return score;
-}
-
 function powerup0(data) {
     const [value, suit] = data.powerup_info;
 
@@ -544,4 +570,69 @@ async function draw_card_by_index(index) {
 
     overlay.classList.add("hidden");
     handleGameState(data);
+}
+
+/**
+ * Calculates the dealer's visible score (excluding hidden card).
+ *
+ * @param {Array} dealerCards - The dealer's cards.
+ * @returns {number} The visible score.
+ */
+function calculateVisibleDealerScore(dealerCards) {
+    if (!dealerCards || dealerCards.length === 0) return 0;
+
+    let score = 0;
+    let aces = 0;
+
+    for (let i = dealerFirstCardRevealed ? 0 : 1; i < dealerCards.length; i++) {
+        const [value] = dealerCards[i];
+
+        if (value === "ACE") {
+            score += 11;
+            aces++;
+        } else if (["KING", "QUEEN", "JACK"].includes(value)) {
+            score += 10;
+        } else if (value !== "JOKER") {
+            score += parseInt(value);
+        }
+    }
+
+    // Hantera ess
+    while (score > 21 && aces > 0) {
+        score -= 10;
+        aces--;
+    }
+
+    return score;
+}
+
+function calculateHandScore(cards) {
+    if (!Array.isArray(cards) || cards.length === 0) return 0;
+
+    let score = 0;
+    let aces = 0;
+
+    for (const card of cards) {
+        if (Array.isArray(card) && card[1] === "BET") continue;
+
+        const value = Array.isArray(card) ? card[0] : null;
+        if (!value) continue;
+
+        if (value === "ACE") {
+            score += 11;
+            aces += 1;
+        } else if (["KING", "QUEEN", "JACK"].includes(value)) {
+            score += 10;
+        } else if (value !== "JOKER") {
+            const n = parseInt(value, 10);
+            if (!isNaN(n)) score += n;
+        }
+    }
+
+    while (score > 21 && aces > 0) {
+        score -= 10;
+        aces -= 1;
+    }
+
+    return score;
 }

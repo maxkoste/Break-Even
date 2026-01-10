@@ -73,9 +73,7 @@ def reset():
     return redirect("/")
 
 
-@app.route(
-    "/api/state"
-)  # This route should not exist. Proper initial load method preferred.
+@app.route("/api/state")  # This route should not exist. Proper initial load method preferred.
 def state():
     """
     Returns the current game state as JSON.
@@ -192,9 +190,15 @@ def hit():
 
     Ends the round if the player busts.
     """
-    busted = logic.draw_card(1)
+    hand_index = logic.active_hand_index
+    busted = logic.draw_card(hand_index)
 
     if busted:
+        # If there are more split hands, move to the next one instead of ending the round
+        if hand_index < len(logic.hands) - 1:
+            logic.active_hand_index += 1
+            return jsonify(logic.game_state())
+
         winner = logic.game_over()
         result = logic.game_state(winner, game_over=True)
         logic.next_turn(winner)
@@ -208,12 +212,19 @@ def stand():
     """
     Handles the player stand action and plays the dealer's turn.
     """
-    logic.dealer_turn()
-    winner = logic.game_over()
-    result = logic.game_state(winner, game_over=True)
-    logic.next_turn(winner)
-
+    result = logic.stand()
+    if result.get("game_over"):
+        logic.next_turn(result.get("winner"))
+  
     return jsonify(result)
+
+@app.route("/api/split", methods=["POST"])
+def split_action():
+    result = logic.split()
+    if "successful" in result:
+        return jsonify(logic.game_state())
+    
+    return jsonify({"error": result}), 400
 
 
 @app.route("/api/use_powerup", methods=["POST"])

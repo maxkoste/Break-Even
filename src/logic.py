@@ -11,6 +11,7 @@ powerup_info = []
 game_started = False
 celestial_data = None
 player_sign= None
+active_hand_index = 1
 
 VALUE_MAP = {
     "ACE": 11,
@@ -212,16 +213,73 @@ def reset_game():
     Restores chips, clears hands and scores, resets powerups,
     and marks the game as not started
     """
-    global chips, hands, scores, game_started, powerups
+    global chips, hands, scores, game_started, powerups, active_hand_index
     chips = 250
     hands = [[], []]
     scores = [0, 0]
     powerups = []
     powerup_info = []
     game_started = False
+    active_hand_index = 1
 
-def split():  # Place one of player's cards into a new hand.
-    pass
+def split():
+    global hands, chips, scores, active_hand_index
+    
+    if active_hand_index >= len(hands):
+        return "Invalid hand index for split."
+
+    current_hand = hands[active_hand_index]
+    
+    actual_cards = [card for card in current_hand if isinstance(card, tuple) and card[1] != "BET"]
+    
+    if len(actual_cards) != 2:
+        return "You need exactly 2 cards to split."
+
+    card1_val = get_score(actual_cards[0][0])
+    card2_val = get_score(actual_cards[1][0])
+
+    if card1_val != card2_val:
+        return f"Values do not match: {actual_cards[0][0]} vs {actual_cards[1][0]}"
+
+    original_bet = 0
+    for card in current_hand:
+        if isinstance(card, tuple) and card[1] == "BET":
+            original_bet = card[0]
+            break
+
+    if chips < original_bet:
+        return "Not enough chips to split."
+
+    chips -= original_bet
+
+    card_to_move = actual_cards.pop()
+    current_hand.remove(card_to_move)
+
+    new_hand_index = len(hands)  
+    new_hand = [card_to_move, (original_bet, "BET")]
+    hands.append(new_hand)
+    
+    scores.append(get_score(card_to_move[0])) 
+    
+    actual_cards_remaining = [c for c in current_hand if isinstance(c, tuple) and c[1] != "BET"]
+    scores[active_hand_index] = sum(get_score(c[0]) for c in actual_cards_remaining)
+    
+    draw_card(active_hand_index)
+    draw_card(new_hand_index)
+    
+    return "Split successful."
+
+def stand():
+    global active_hand_index
+    # Move to the next hand if there are more split hands
+    if active_hand_index < len(hands) - 1:
+        active_hand_index += 1
+        # Returning game_state tells the frontend Player 2 is now active
+        return game_state()
+    else:
+        # If no more hands, dealer takes their turn
+        dealer_turn()
+        return game_state(winner=game_over(), game_over=True)
 
 
 def double_down(bet_amount, hand_index=0):
@@ -316,8 +374,15 @@ def game_state(winner=None, game_over=False):
         dict: A dictionary containging player and dealer hands, scores, chips, powerups,
         game status and the winner if available.
     """
+    player_hand_slice = hands[1:]
+    # UI works with player hand indices starting at 0, while dealer is stored at index 0
+    active_player_index = max(active_hand_index - 1, 0)
+
     return {
         "player": hands[1],
+        "player_hands": player_hand_slice,
+        "player_scores": [scores[i] for i in range(1, len(scores))],
+        "active_hand_index": active_player_index,
         "dealer": hands[0],
         "player_score": scores[1],
         "dealer_score": scores[0],
@@ -337,10 +402,11 @@ def next_turn(winner):
     Args:
         winner (str): The winner of the previous round (unused in this function.)
     """
-    global hands, scores
+    global hands, scores, active_hand_index
 
     hands = [[], []]
     scores = [0, 0]
+    active_hand_index = 1
 
 
 def assign_powerups(powerup_id):  # Read celestial data and assign correct powerups
