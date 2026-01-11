@@ -280,6 +280,13 @@ async function startGame() {
 		console.log("No valid bet selected, setting it to 50");
 		bet = 50;
 	}
+
+    const data = await callGameApi("/api/deal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bet })
+    });
+
     handleGameState(data, false);
 }
 
