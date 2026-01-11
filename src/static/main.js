@@ -189,15 +189,26 @@ function handleRoundState(data) {
     if (!data.game_started) return;
 
     if (data.game_over) {
+
+        // VICTORY
+        if (data.victory) {
+            window.location.href = "/victory";
+            return;
+        }
+
+        // GAME OVER
         if (data.chips <= 0) {
             window.location.href = "/game-over";
-        } else {
-            endRoundUI();
+            return;
         }
-    } else {
-        inRoundUI();
+
+        endRoundUI();
+        return;
     }
+
+    inRoundUI();
 }
+
 
 function handleGameState(data, resetDropdown = true) {
     debug(data);

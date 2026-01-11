@@ -2,16 +2,16 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <title>Game Over</title>
+    <title>Victory</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1 id="game_over_title">Game Over</h1>
-    <p class="game_over">You are to much in debt</p>
+    <h1 id="game_over_title">You Win</h1>
+    <p class="game_over">You are debt free!</p>
 
     <form action="/reset" method="post">
-        <button class="game-button" type="submit">Start a new game</button>
+        <button class="game-button" type="submit">Start new game</button>
     </form>
 </body>
 </html>

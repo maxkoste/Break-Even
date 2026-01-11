@@ -237,3 +237,11 @@ h1 {
     align-items: center;
     gap: 20px;
 }
+#game_over_title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 96px;
+}
+
+.game_over {
+    font-size: 32px;
+}

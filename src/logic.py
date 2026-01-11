@@ -453,6 +453,7 @@ def game_state(winner=None, game_over=False):
         "game_started": game_started,
         "game_over": game_over,
         "winner": winner,
+        "victory": chips >= 10000
     }
 
 

@@ -29,6 +29,10 @@ def game():
 
     return render_template("game.html", chips=logic.chips)
 
+@app.route("/victory")
+def victory():
+    return render_template("victory.html")
+
 @app.route("/game-over")
 def game_over():
     """
