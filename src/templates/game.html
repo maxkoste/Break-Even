@@ -27,8 +27,11 @@
 
     <!-- Player Info -->
     <section id="playerInfo">
-        <p>Chips: <span id="chipsDisplay">200</span></p>
-        <p>Current bet: <span id="currentBetDisplay">0</span></p>
+        <div id="bankInfo">
+            <p><img class="chips" src="{{ url_for('static', filename='assets/casino-chip.png') }}" alt="Poker chip"> Chips: <span id="chipsDisplay">200</span></p>
+            <p><img class="chips" src="{{ url_for('static', filename='assets/poker-chip.png') }}" alt="Casino chip"> Current bet: <span id="currentBetDisplay">0</span></p>
+            <p><img class="chips" src="{{ url_for('static', filename='assets/depression.png') }}" alt="Debt chip"> Debt: <span id="debtDisplay">10000</span></p>
+        </div>
     </section>
 
 	<!-- Dealer Cards -->
@@ -89,7 +92,7 @@
 
             handleGameState(data, false);
             populateBetDropdown(data.chips);
-            updateBankUI(data.chips, currentBet);
+            updateBankUI(data.chips, currentBet, data.debt);
         });
     </script>
 </body>

@@ -2,6 +2,7 @@ from collections import deque
 import random
 
 chips = 250
+debt = 10000
 deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
@@ -224,8 +225,9 @@ def reset_game():
     Restores chips, clears hands and scores, resets powerups,
     and marks the game as not started
     """
-    global chips, hands, scores, game_started, powerups, active_hand_index
+    global chips, hands, scores, game_started, powerups, active_hand_index, debt
     chips = 250
+    debt = 10000
     hands = [[], []]
     scores = [0, 0]
     powerups = []
@@ -361,7 +363,7 @@ def game_over():
     Returns:
         str: A message indicating the winner, or "GAME_OVER" if the player has no chips left.
     """
-    global chips
+    global chips, debt
     player_score = scores[1]
     dealer_score = scores[0]
 
@@ -370,6 +372,9 @@ def game_over():
         if isinstance(card, tuple) and len(card) == 2 and card[1] == "BET":
             bet_amount = card[0]
             break
+
+    # Calculate what chips were before the bet was placed
+    chips_before_bet = chips + bet_amount
 
     if dealer_score > 21:
         chips += bet_amount * 2
@@ -385,7 +390,10 @@ def game_over():
         chips += bet_amount
         winner = "It's a tie!"
 
-        # Om spelaren har 0 chips efter detta, signalera GAME_OVER
+    # Calculate change in chips relative to before the bet and update debt accordingly
+    chips_change = chips - chips_before_bet
+    debt -= chips_change
+
     if chips <= 0:
         return "GAME_OVER"
     
@@ -417,6 +425,7 @@ def game_state(winner=None, game_over=False):
         "player_score": scores[1],
         "dealer_score": scores[0],
         "chips": chips,
+        "debt": debt,
         "powerups": powerups,
         "powerup_info": powerup_info,
         "player_sign" : player_sign,

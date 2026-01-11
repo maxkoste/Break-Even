@@ -9,9 +9,15 @@
 <body>
     <h1>Blackjack Casino</h1>
     <p>Welcome!</p>
-    <p id="demo">Click the button to get location</p>
-    <button onclick="getLocation()">Get location</button>
+	<div id="gameSetup">
+		
+		<p id="demo">Click the button to get location</p>
+		<button onclick="getLocation()">Get location</button>
+		
 
+		<button class="game-button" onclick="initGameState()">Start Game</button>
+
+		
 		<form onsubmit="return false;">
 			<label for="sign">Choose your sign:</label>
 			<select id="sign">
@@ -29,9 +35,8 @@
 				<option value="pisces">Pisces</option>
 			</select>
 		</form>
-
-		<button class="game-button" onclick="initGameState()">Start Game</button>
-
+	
+	</div>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
