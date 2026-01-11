@@ -138,25 +138,47 @@ h1 {
     cursor: pointer;
 }
 
-.joker-popup {
+.popup {
     position: fixed;
-    bottom: 50%;
+    top: 50%;
     left: 50%;
-    transform: translate(-50%, 50%) scale(0.9);
-    width: 120px;
+    transform: translate(-50%, -50%) scale(0.9);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
 
     opacity: 0;
     transition: opacity 0.6s ease, transform 0.6s ease;
 
     z-index: 4000;
     pointer-events: none;
+}
 
+.popup.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+}
+
+.popup img {
+    height: 140px;
+    width: auto;
     image-rendering: pixelated;
 }
 
-.joker-popup.show {
-    opacity: 1;
-    transform: translate(-50%, 50%) scale(1.05);
+.popup-text-wrapper {
+    background: rgba(13, 92, 13, 0.95);
+    border: 3px solid gold;
+    border-radius: 12px;
+    padding: 12px 20px;
+}
+
+.popup-text {
+    color: gold;
+    font-size: 1.25rem;
+    text-align: center;
+    line-height: 1.4;
 }
 
 .event-box {

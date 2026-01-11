@@ -325,6 +325,7 @@ function populateModalButtonsFromArray(numbers) {
             const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
             modal.hide();
             usePowerUp(num);
+            showPopup(IMAGES.POWERUP[num], POWERUP_TEXT[num]);
         };
         container.appendChild(btn);
     });
@@ -377,6 +378,20 @@ SUITS.forEach(suit => {
         IMAGES[suit][val] = `static/assets/${code}${suit[0]}.png`;
     });
 });
+
+const POWERUP_TEXT = {
+    0: "Illuminate!",
+    1: "Light side, or dark?",
+    2: "Back to the start <-",
+    3: "The dealer is charmed~",
+    4: "Fissure!",
+    5: "Obliterate!!!",
+    6: "Extend your grasp!",
+    7: "Loop around ->",
+    8: "No, you.",
+    9: "Reach for the stars *",
+    10: "Another chance?"
+};
 
 function getCardImageSrc(value, suit) {
     if (suit === "BLACK" || suit === "RED") suit = "JOKER";
@@ -492,25 +507,41 @@ function triggerAnimations(data) {
         count + hand.filter(([value]) => value === "JOKER").length, 0);
 
     if (jokerCount > lastJokerCount) {
-        showJokerPopup();
+        showPopup(IMAGES.JOKER.JOKER);
     }
     lastJokerCount = jokerCount;
 }
 
-function showJokerPopup() {
+function showPopup(imageSrc, text = null) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "popup";
+
     const img = document.createElement("img");
-    img.src = IMAGES.JOKER.JOKER;
-    img.className = "joker-popup";
-    document.body.appendChild(img);
+    img.src = imageSrc;
+    wrapper.appendChild(img);
+
+    if (text) {
+        const textWrapper = document.createElement("div");
+        textWrapper.className = "popup-text-wrapper";
+
+        const label = document.createElement("div");
+        label.className = "popup-text";
+        label.textContent = text;
+
+        textWrapper.appendChild(label);
+        wrapper.appendChild(textWrapper);
+    }
+
+    document.body.appendChild(wrapper);
 
     requestAnimationFrame(() => {
-        img.classList.add("show");
+        wrapper.classList.add("show");
     });
 
     setTimeout(() => {
-        img.classList.remove("show");
-        img.addEventListener("transitionend", () => img.remove(), { once: true });
-    }, 1000);
+        wrapper.classList.remove("show");
+        wrapper.addEventListener("transitionend", () => wrapper.remove(), { once: true });
+    }, 1400);
 }
 
 function showEventOverlay() {
