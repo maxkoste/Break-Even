@@ -44,29 +44,26 @@
 	<section id="playerHandsContainer">
 	</section>
 
-    <!-- Card Display -->
-    <section id="cardDisplay">
-        <div id="displayOverlay" class="hidden">
-            <div id="displayContent"></div>
-        </div>
-    </section>
+    <!-- Power-up overlay -->
+    <div id="displayOverlay" class="hidden">
+        <div id="displayContent"></div>
+    </div>
 
     <!-- Game Control Buttons -->
     <section id="controls" style="display: none;">
         <!-- Button trigger modal -->
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-        Launch demo modal
+        <button type="button" id="powerupLaunchBtn" class="game-button" data-bs-toggle="modal" data-bs-target="#powerupModal">
+          Power-Ups
         </button>
     </section>
 
         <!-- Modal -->
-        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal fade" id="powerupModal" tabindex="-1" role="dialog" aria-labelledby="powerupModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <h5 class="modal-title" id="powerupModalLabel">Power-Ups</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body" id="modalButtons">
