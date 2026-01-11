@@ -6,7 +6,7 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = [1, 1, 1, 2, 2]
+powerups = []
 powerup_info = []
 game_started = False
 celestial_data = None
@@ -22,12 +22,17 @@ VALUE_MAP = {
 
 #int corresponds to the case in the method use_powerup()
 BODY_POWERUPS = {
-    "Moon": 1,
-    "Sun": 0,
-    "Mars": 5,
+    "Moon": 0,
+    "Sun": 1,
+    "Mercury": 2,
     "Venus": 3,
     "Earth": 4,
-    "Jupiter": 6
+    "Mars": 5,
+    "Jupiter": 6,
+    "Saturn": 7,
+    "Uranus": 8,
+    "Neptune": 9,
+    "Pluto": 10
 }
 
 def populate_deck(cards):  # Take data from the API call and place the cards inside the deck.
@@ -414,6 +419,7 @@ def game_state(winner=None, game_over=False):
         "chips": chips,
         "powerups": powerups,
         "powerup_info": powerup_info,
+        "player_sign" : player_sign,
         "game_started": game_started,
         "game_over": game_over,
         "winner": winner,
@@ -503,6 +509,7 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
             card_value, suit = hands[0][1]
             scores[0] -= get_score(card_value)
             del hands[0][1]
+            return game_state()
         case 6:  # Jupter Major, search next 7 cards, draw the one that gets you closest to 21.
             pass
         case (

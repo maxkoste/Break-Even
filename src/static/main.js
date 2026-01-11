@@ -1,6 +1,8 @@
 const x = document.getElementById("demo");
 const betStep = 50;
 let dealerFirstCardRevealed = false;
+let lastJokerCount = 0;
+let shownEvents = new Set();
 
 /**
  * Requests the user's current geographic location.
@@ -127,8 +129,8 @@ async function callGameApi(url, options = {}) {
  * @param {boolean} resetDropdown - Whether to reset the bet dropdown.
  */
 function debug(data) {
-    const el = document.getElementById("output");
-    if (el) el.textContent = JSON.stringify(data, null, 2);
+    //const el = document.getElementById("output");
+    //if (el) el.textContent = JSON.stringify(data, null, 2);
 }
 
 function powerupsModal(powerups) {
@@ -229,6 +231,8 @@ function handleRoundState(data) {
 
 function handleGameState(data, resetDropdown = true) {
     debug(data);
+    triggerAnimations(data);
+    triggerEvent("POWERUPS_GAINED", data)
     powerupsModal(data.powerups);
     dealerCards(data.dealer, data.game_started, data.game_over);
     scores(data);
@@ -320,6 +324,8 @@ async function initGameState(){
 	}
 
     window.location.href="/game";
+
+    triggerEvent("POWERUPS_GAINED", gameData);
 }
 
 /**
@@ -356,21 +362,36 @@ function populateModalButtonsFromArray(numbers) {
     const container = document.getElementById("modalButtons");
     container.innerHTML = "";
 
-    // Remove duplicates
     const uniqueNumbers = [...new Set(numbers)];
 
     uniqueNumbers.forEach(num => {
         const btn = document.createElement("button");
+        btn.className = "game-button m-1";
+        btn.type = "button";
 
-        btn.className = "btn btn-primary m-1";
-        btn.textContent = num;
+        const imgPath = IMAGES.POWERUP[num];
+        const name = imgPath.split("/").pop().replace(".png", "");
+
+        const img = document.createElement("img");
+        img.src = imgPath;
+        img.alt = name;
+        img.className = "powerup-icon";
+
+        const label = document.createElement("div");
+        label.className = "powerup-label";
+        label.textContent = name;
+
+        btn.appendChild(img);
+        btn.appendChild(label)
 
         btn.onclick = () => {
-            const modalEl = document.getElementById("exampleModal");
-            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modal.hide();          // This will trigger the fade out animation
-            
-            usePowerUp(num)
+            const modalEl = document.getElementById("powerupModal");
+            const modal =
+                bootstrap.Modal.getInstance(modalEl) ||
+                new bootstrap.Modal(modalEl);
+
+            modal.hide();
+            usePowerUp(num);
         };
 
         container.appendChild(btn);
@@ -403,7 +424,7 @@ async function usePowerUp(num) {
     handleGameState(data);
 }
 
-const CARD_IMAGES = {
+const IMAGES = {
     "HEARTS": {
         "ACE": "static/assets/AH.png",
         "2": "static/assets/2H.png",
@@ -469,6 +490,19 @@ const CARD_IMAGES = {
 	},
     "BACKGROUND": {
         "BACKGROUND": "static/assets/Background.png",
+    },
+    "POWERUP": {
+        0: "static/assets/Sun.png",
+        1: "static/assets/Moon.png",
+        2: "static/assets/Mercury.png",
+        3: "static/assets/Venus.png",
+        4: "static/assets/Earth.png",
+        5: "static/assets/Mars.png",
+        6: "static/assets/Jupiter.png",
+        7: "static/assets/Saturn.png",
+        8: "static/Uranus.png",
+        9: "static/assets/Neptune.png",
+        10: "static/assets/Pluto.png"
     }
 };
 
@@ -480,7 +514,7 @@ function getCardImageSrc(value, suit) {
     else if (value === "KING") value = "K";
     else value = value.toString();
 
-    return CARD_IMAGES[suit][value];
+    return IMAGES[suit][value];
 }
 
 /**
@@ -497,7 +531,7 @@ function renderCards(containerId, cards, hideFirst = false) {
     container.innerHTML = "";
 
     cards
-        .filter(([value, suit]) => suit !== "BET")
+        .filter(([value, suit]) => suit !== "BET" && value !== "JOKER")
         .forEach(([value, suit], index) => {
 
             const img = document.createElement("img");
@@ -506,7 +540,7 @@ function renderCards(containerId, cards, hideFirst = false) {
 
             // Hide dealer's first card
             if (hideFirst && index === 0 && !dealerFirstCardRevealed) {
-                img.src = CARD_IMAGES.BACKGROUND.BACKGROUND;
+                img.src = IMAGES.BACKGROUND.BACKGROUND;
                 img.alt = "Face-down card";
                 container.appendChild(img);
                 return;
@@ -539,11 +573,11 @@ function powerup0(data) {
 }
 
 function powerup1(data) {
-    const overlay = document.getElementById("displayOverlay");
-    const content = document.getElementById("displayContent");
+    showEventOverlay();
 
-    content.innerHTML = "";
-    overlay.classList.remove("hidden");
+    const wrapper = document.createElement("div");
+    wrapper.style.display = "flex";
+    wrapper.style.gap = "20px";
 
     const [value, suit] = data.powerup_info;
 
@@ -554,28 +588,24 @@ function powerup1(data) {
 
     const backImg = document.createElement("img");
     backImg.className = "card";
-    backImg.src = CARD_IMAGES.BACKGROUND.BACKGROUND;
+    backImg.src = IMAGES.BACKGROUND.BACKGROUND;
     backImg.onclick = () => draw_card_by_index(1);
 
-    content.appendChild(peekImg);
-    content.appendChild(backImg);
+    wrapper.appendChild(peekImg);
+    wrapper.appendChild(backImg);
+
+    setEventContent(wrapper);
 }
 
 async function draw_card_by_index(index) {
-    const overlay = document.getElementById("displayOverlay");
-    const content = document.getElementById("displayContent");
-
-    content.innerHTML = "";
+    hideEventOverlay();
 
     const data = await callGameApi("/api/draw_card_by_index", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            index: index
-        })
+        body: JSON.stringify({ index })
     });
 
-    overlay.classList.add("hidden");
     handleGameState(data);
 }
 
@@ -642,4 +672,112 @@ function calculateHandScore(cards) {
     }
 
     return score;
+}
+
+function triggerAnimations(data) {
+    if (!Array.isArray(data.player)) return;
+
+    const jokerCount = data.player.filter(
+        ([value]) => value === "JOKER"
+    ).length;
+
+    if (jokerCount > lastJokerCount) {
+        showJokerPopup();
+    }
+
+    lastJokerCount = jokerCount;
+}
+
+function showJokerPopup() {
+    const img = document.createElement("img");
+    img.src = IMAGES.JOKER.JOKER;
+    img.className = "joker-popup";
+
+    document.body.appendChild(img);
+
+    requestAnimationFrame(() => {
+        img.classList.add("show");
+    });
+
+    setTimeout(() => {
+        img.classList.remove("show");
+        img.addEventListener("transitionend", () => img.remove(), { once: true });
+    }, 1000);
+}
+
+function showEventOverlay() {
+    document.getElementById("displayOverlay").classList.remove("hidden");
+    document.body.classList.add("modal-open");
+}
+
+function hideEventOverlay() {
+    document.getElementById("displayOverlay").classList.add("hidden");
+    document.body.classList.remove("modal-open");
+}
+
+function setEventContent(node) {
+    const content = document.getElementById("displayContent");
+    content.innerHTML = "";
+    content.appendChild(node);
+}
+
+function eventPowerupsGained(data) {
+    showEventOverlay();
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "event-box";
+
+    const title = document.createElement("h3");
+    const name = data.player_sign;
+    title.textContent = "Celestial Guidance | " + name[0].toUpperCase() + name.slice(1) + " |";
+    wrapper.appendChild(title);
+
+    const description = document.createElement("p");
+    description.textContent =
+        "The stars align over Vegas, the heavens themselves at your beck and call:";
+    wrapper.appendChild(description);
+
+    const grid = document.createElement("div");
+    grid.className = "event-powerup-grid";
+
+    data.powerups.forEach(id => {
+        const imgPath = IMAGES.POWERUP[id];
+        const name = imgPath.split("/").pop().replace(".png", "");
+
+        const item = document.createElement("div");
+        item.className = "event-powerup-item";
+
+        const img = document.createElement("img");
+        img.src = imgPath;
+        img.alt = name;
+        img.className = "powerup-icon";
+
+        const label = document.createElement("div");
+        label.textContent = name;
+
+        item.appendChild(img);
+        item.appendChild(label);
+        grid.appendChild(item);
+    });
+
+    wrapper.appendChild(grid);
+
+    const continueBtn = document.createElement("button");
+    continueBtn.className = "game-button mt-3";
+    continueBtn.textContent = "Continue";
+    continueBtn.onclick = hideEventOverlay;
+
+    wrapper.appendChild(continueBtn);
+
+    setEventContent(wrapper);
+}
+
+const EVENTS = {
+    POWERUPS_GAINED: eventPowerupsGained,
+};
+
+function triggerEvent(type, data) {
+    if (shownEvents.has(type)) return;
+    shownEvents.add(type);
+    EVENTS[type]?.(data);
 }

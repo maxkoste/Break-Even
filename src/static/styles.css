@@ -50,6 +50,41 @@ h1 {
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
 }
 
+#powerupModal .modal-content {
+    background-color: #0d5c0d; 
+    color: white;
+    font-family: Georgia, serif;
+    border: 3px solid gold;
+    border-radius: 10px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.5);
+}
+
+#powerupModal .modal-header {
+    border-bottom: 2px solid gold;
+}
+
+#powerupModal .modal-title {
+    color: gold;
+}
+
+#powerupModal .btn-close {
+    filter: invert(1);
+}
+
+#powerupLaunchBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 998;
+}
+
+.powerup-icon {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
 .cards-container {
     min-height: 120px;
 }
@@ -97,8 +132,12 @@ h1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 999;
+    z-index: 1999;
     pointer-events: auto;
+}
+
+#displayOverlay body.modal-open{
+    pointer-events: none;
 }
 
 #displayOverlay.hidden {
@@ -114,4 +153,56 @@ h1 {
 
 #displayContent img.card {
     cursor: pointer;
+}
+
+.joker-popup {
+    position: fixed;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%) scale(0.9);
+    width: 120px;
+
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+
+    z-index: 4000;
+    pointer-events: none;
+
+    image-rendering: pixelated;
+}
+
+.joker-popup.show {
+    opacity: 1;
+    transform: translate(-50%, 50%) scale(1.05);
+}
+
+.event-box {
+    background: #0d5c0d;
+    border: 3px solid gold;
+    border-radius: 12px;
+    padding: 24px 32px;
+    max-width: 600px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+}
+
+.event-powerup-grid {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.event-powerup-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.9rem;
+    color: gold;
+}
+
+.event-powerup-item img {
+    width: 64px;
+    height: 64px;
 }
