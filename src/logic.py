@@ -240,7 +240,7 @@ def bet(amount, hand_index=1):
     # Store the bet in the hand (as the first element in the hand)
     hands[hand_index].append((amount, "BET"))
 
-    if chips <= 0:
+    if chips < 50:
         return "GAME_OVER"
 
     return f"Bet of {amount} placed on hand {hand_index}."
@@ -285,7 +285,7 @@ def split(allow_any_split=False):
     # Extract cards (ignore BET and joker)
     actual_cards = [
         card for card in current_hand
-        if isinstance(card, tuple) and card[1] != "BET" or "JOKER"
+        if isinstance(card, tuple) and card[1] != "BET" and card[0] != "JOKER"
     ]
 
     if not allow_any_split and len(actual_cards) != 2:

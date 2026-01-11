@@ -623,5 +623,5 @@ function showWinLossPopup(winner, chipsChange) {
     setTimeout(() => {
         popup.classList.remove("show");
         popup.addEventListener("transitionend", () => popup.remove(), { once: true });
-    }, 2500);
+    }, 1500);
 }
