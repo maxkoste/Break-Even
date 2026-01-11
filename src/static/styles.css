@@ -290,3 +290,54 @@ h1 {
     justify-content: center;
 
 }
+
+/* Popoup för vinst/förlust */
+.winloss-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    
+    background: rgba(13, 92, 13, 0.95);
+    border: 4px solid gold;
+    border-radius: 20px;
+    padding: 40px 60px;
+    
+    text-align: center;
+    font-family: Georgia, serif;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    
+    z-index: 5000;
+    pointer-events: none;
+}
+
+.winloss-popup.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.winloss-popup.win {
+    color: #90EE90;
+}
+
+.winloss-popup.loss {
+    color: #FF6B6B;
+}
+
+.winloss-popup.tie {
+    color: #FFD700;
+}
+
+.winloss-winner {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.winloss-chips {
+    font-size: 3rem;
+    font-weight: bold;
+}
