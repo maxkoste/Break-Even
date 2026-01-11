@@ -272,10 +272,10 @@ def split(allow_any_split=False):
         return "Invalid hand index for split."
     
     current_hand = hands[active_hand_index]
-    # Extract cards (ignore BET)
+    # Extract cards (ignore BET and joker)
     actual_cards = [
         card for card in current_hand
-        if isinstance(card, tuple) and card[1] != "BET"
+        if isinstance(card, tuple) and card[1] != "BET" or "JOKER"
     ]
 
     if not allow_any_split and len(actual_cards) != 2:
