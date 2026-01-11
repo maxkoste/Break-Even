@@ -136,6 +136,9 @@ def get_celestial_data():
     Fetches celestial body positions from the Astronomy API.
 
     Retrieves current constellation data and stores it in the game logic.
+
+    Returns:
+        dict: A mapping of celestial body names to constellation names.
     """
     app_id = os.getenv("ASTRONOMY_APP_ID")
     app_secret = os.getenv("ASTRONOMY_APP_SECRET")
