@@ -7,7 +7,8 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]
+#powerups = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]
+powerups = [0, 1, 2]
 powerup_info = []
 game_started = False
 celestial_data = None
@@ -141,10 +142,19 @@ def perform_hit(rotate_amount=None):
         if active_hand_index < len(hands) - 1:
             active_hand_index += 1
             return game_state()
-        winner = game_over()
-        result = game_state(winner, game_over=True)
-        next_turn(winner)
-        return result
+        
+        result = game_over()
+        
+        if isinstance(result, dict):
+            winner = result["winner"]
+            chips_won = result.get("chips_won", 0)
+        else:
+            winner = result
+            chips_won = 0
+            
+        state = game_state(winner, game_over=True, chips_won=chips_won)
+        next_turn(winner if isinstance(result, str) else result["winner"])
+        return state
     return game_state()
 
 def set_celestial_data(data):
@@ -314,24 +324,24 @@ def split(allow_any_split=False):
     return "Split successful."
 
 def stand():
-    """
-    Ends the current player's turn. 
-
-    Moves to the next hand if the player has split hands, otherwise lets the dealer play.
-
-    Returns:
-        dict: Updated game state after the player's or dealer's turn.
-    """
+    """Ends the current player's turn."""
     global active_hand_index
-    # Move to the next hand if there are more split hands
+    
     if active_hand_index < len(hands) - 1:
         active_hand_index += 1
-        # Returning game_state tells the frontend Player 2 is now active
         return game_state()
     else:
-        # If no more hands, dealer takes their turn
         dealer_turn()
-        return game_state(winner=game_over(), game_over=True)
+        result = game_over()
+        
+        if isinstance(result, dict):
+            winner = result["winner"]
+            chips_won = result.get("chips_won", 0)
+        else:
+            winner = result
+            chips_won = 0
+            
+        return game_state(winner=winner, game_over=True, chips_won=chips_won)
 
 
 def double_down(bet_amount, hand_index=0):
@@ -386,44 +396,68 @@ def game_over():
     global chips, debt
     dealer_score = scores[0]
     total_reward = 0
+    chips_won = 0  
 
     for i in range(1, len(hands)):
         hand = hands[i]
         player_score = scores[i]
 
-        # Find bet for this hand
         bet_amount = next(
             (card[0] for card in hand if isinstance(card, tuple) and card[1] == "BET"),
             0
         )
-        chips_before_bet = chips + bet_amount
+
+        # Kolla Blackjack
+        has_blackjack = False
+        actual_cards = [c for c in hand if not (isinstance(c, tuple) and c[1] == "BET")]
+        
+        if len(actual_cards) == 2 and player_score == 21:
+            values = [c[0] for c in actual_cards]
+            has_ace = "ACE" in values
+            has_ten_value = any(v in ["KING", "QUEEN", "JACK"] or str(v) == "10" or v == 10 for v in values)
+            
+            if has_ace and has_ten_value:
+                has_blackjack = True
 
         if dealer_score > 21:
-            total_reward += bet_amount * 2
-            winner = "Player wins! Dealer busted"
+            if has_blackjack:
+                total_reward += int(bet_amount * 2.5)
+                chips_won = int(bet_amount * 1.5)  
+                winner = "Blackjack! Player wins 3:2!"
+            else:
+                total_reward += bet_amount * 2
+                chips_won = bet_amount 
+                winner = "Player wins! Dealer busted"
         elif player_score > 21:
+            chips_won = -bet_amount  
             winner = "Dealer wins! Player busted"
         elif player_score > dealer_score:
-            total_reward += bet_amount * 2
-            winner = "Player wins!"
+            if has_blackjack:
+                total_reward += int(bet_amount * 2.5)
+                chips_won = int(bet_amount * 1.5)
+                winner = "Blackjack! Player wins 3:2!"
+            else:
+                total_reward += bet_amount * 2
+                chips_won = bet_amount
+                winner = "Player wins!"
         elif dealer_score > player_score:
+            chips_won = -bet_amount
             winner = "Dealer wins!"
         else:
             total_reward += bet_amount
+            chips_won = 0  # Push
             winner = "It's a tie!"
         
-        chips += total_reward
-        chips_change = chips - chips_before_bet
-        debt -= chips_change
+    chips += total_reward
+    debt -= total_reward
 
-        # Om spelaren har 0 chips efter detta, signalera GAME_OVER
     if chips <= 0:
         return "GAME_OVER"
     
-    return winner
+    return {"winner": winner, "chips_won": chips_won}  
 
 
-def game_state(winner=None, game_over=False):
+def game_state(winner=None, game_over=False, chips_won=0):
     """
     Returns the current state of the game as a dictionary.
 
@@ -436,7 +470,6 @@ def game_state(winner=None, game_over=False):
         game status and the winner if available.
     """
     player_hand_slice = hands[1:]
-    # UI works with player hand indices starting at 0, while dealer is stored at index 0
     active_player_index = max(active_hand_index - 1, 0)
 
     return {
@@ -446,6 +479,7 @@ def game_state(winner=None, game_over=False):
         "dealer": hands[0],
         "dealer_score": scores[0],
         "chips": chips,
+        "chips_won": chips_won,  
         "debt": debt,
         "powerups": powerups,
         "powerup_info": powerup_info,

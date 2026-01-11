@@ -189,7 +189,6 @@ function handleRoundState(data) {
     if (!data.game_started) return;
 
     if (data.game_over) {
-
         // VICTORY
         if (data.victory) {
             window.location.href = "/victory";
@@ -202,7 +201,7 @@ function handleRoundState(data) {
             return;
         }
 
-        endRoundUI();
+        endRoundUI(data); 
         return;
     }
 
@@ -227,19 +226,24 @@ function inRoundUI() {
     document.getElementById("betting").style.display = "none";
 }
 
-function endRoundUI() {
+function endRoundUI(data) {
     document.getElementById("controls").style.display = "none";
     const startBtn = document.getElementById("startBtn");
     startBtn.style.display = "block";
     startBtn.textContent = "New Round";
     startBtn.onclick = startGame;
     document.getElementById("betting").style.display = "block";
+    
+    const chipsWon = data.chips_won || 0;
+    
+    console.log(`Chips won from backend: ${chipsWon}`);
+    
+    showWinLossPopup(data.winner, chipsWon);
 }
 
 async function startGame() {
     dealerFirstCardRevealed = false;
     let bet = 0;
-
     try {
         bet = parseInt(document.getElementById("betSelect").value, 10);
     } catch (error) {
@@ -580,4 +584,44 @@ function createPowerupItem(id) {
     item.appendChild(img);
     item.appendChild(label);
     return item;
+}
+
+function showWinLossPopup(winner, chipsChange) {
+    const popup = document.createElement("div");
+    popup.className = "winloss-popup";
+    
+    if (chipsChange > 0) {
+        popup.classList.add("win");
+    } else if (chipsChange < 0) {
+        popup.classList.add("loss");
+    } else {
+        popup.classList.add("tie");
+    }
+    
+    const winnerText = document.createElement("div");
+    winnerText.className = "winloss-winner";
+    winnerText.textContent = winner || "Round over";
+    
+    const chipsText = document.createElement("div");
+    chipsText.className = "winloss-chips";
+    if (chipsChange > 0) {
+        chipsText.textContent = `+${chipsChange} chips`;
+    } else if (chipsChange < 0) {
+        chipsText.textContent = `${chipsChange} chips`;
+    } else {
+        chipsText.textContent = "±0 chips";
+    }
+    
+    popup.appendChild(winnerText);
+    popup.appendChild(chipsText);
+    document.body.appendChild(popup);
+    
+    requestAnimationFrame(() => {
+        popup.classList.add("show");
+    });
+    
+    setTimeout(() => {
+        popup.classList.remove("show");
+        popup.addEventListener("transitionend", () => popup.remove(), { once: true });
+    }, 2500);
 }
