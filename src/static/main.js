@@ -59,10 +59,14 @@ function handleError(err) {
  *
  * @param {number} chips - The player's total chips.
  * @param {number} bet - The current bet amount.
+ * @param {number} debt - The player's current debt.
  */
-function updateBankUI(chips, bet) {
+function updateBankUI(chips, bet, debt) {
     document.getElementById("chipsDisplay").textContent = chips;
     document.getElementById("currentBetDisplay").textContent = bet;
+    if (debt !== undefined) {
+        document.getElementById("debtDisplay").textContent = debt;
+    }
 }
 
 /**
@@ -206,13 +210,14 @@ function playerHands(data) {
 
 function bets(data, resetDropdown) {
     const chips = data.chips;
+    const debt = data.debt;
     const bet = extractBet(data.player);
 
     if (resetDropdown) {
         populateBetDropdown(chips, bet);
     }
 
-    updateBankUI(chips, bet);
+    updateBankUI(chips, bet, debt);
 }
 
 function handleRoundState(data) {

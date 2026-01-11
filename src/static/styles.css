@@ -24,6 +24,7 @@ h1 {
     cursor: pointer;
     transition: background-color 0.3s;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    
 }
 
 .game-button:hover {
@@ -205,4 +206,51 @@ h1 {
 .event-powerup-item img {
     width: 64px;
     height: 64px;
+}
+
+#playerHandsContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#resetButton {
+    background-color: #c41e3a;; 
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    font-size: 16px;
+    font-family: Georgia, serif;
+    border: 3px solid gold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+#playerInfo {
+    display: flex;
+    flex-direction: row-;
+    justify-content: center;
+}
+
+#bankInfo {
+    display: flex;
+    gap: 20px;
+}
+
+.chips {
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+#gameSetup {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
 }
