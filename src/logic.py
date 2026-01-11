@@ -7,12 +7,13 @@ deck_id = None  # Not needed?
 deck = None
 hands = [[], []]
 scores = [0, 0]
-powerups = []
+powerups = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]
 powerup_info = []
 game_started = False
 celestial_data = None
 player_sign= None
 active_hand_index = 1
+saturn_active = False
 
 VALUE_MAP = {
     "ACE": 11,
@@ -106,6 +107,7 @@ def recalculate_score(hand_index):
     Args:
         hand_index (int): Index of the hans (0 = dealer, 1 = player).
     """
+    global saturn_active
     score = 0
     aces = 0
 
@@ -129,6 +131,11 @@ def recalculate_score(hand_index):
         aces -= 1
 
     scores[hand_index] = score
+
+    if scores[hand_index] > 21 and saturn_active:
+        scores[hand_index] = (scores[hand_index] - 1) % 21 + 1
+        saturn_active = False
+
 
 def set_celestial_data(data):
     """
@@ -235,62 +242,79 @@ def reset_game():
     game_started = False
     active_hand_index = 1
 
-def split():
+def split(allow_any_split=False):
     """
     Attempts to split the current player hand into two hands.
 
-    Conditions:
-    - The hand must have exactly 2 cards.
-    - The card values must match.
-    - Player must have enough chips to cover the additional bet.
+    Normal split:
+    - Exactly 2 cards
+    - Matching values
+    - Costs chips equal to bet
 
-    Returns:
-        str: Success message if split is allowed, otherwise an error message.
+    Earth split (allow_any_split=True):
+    - Any hand length >= 2
+    - No value check
+    - Free bet on new hand
     """
     global hands, chips, scores, active_hand_index
-    
+
     if active_hand_index >= len(hands):
         return "Invalid hand index for split."
 
     current_hand = hands[active_hand_index]
-    
-    actual_cards = [card for card in current_hand if isinstance(card, tuple) and card[1] != "BET"]
-    
-    if len(actual_cards) != 2:
+
+    # Extract cards (ignore BET)
+    actual_cards = [
+        card for card in current_hand
+        if isinstance(card, tuple) and card[1] != "BET"
+    ]
+
+    if not allow_any_split and len(actual_cards) != 2:
         return "You need exactly 2 cards to split."
 
-    card1_val = get_score(actual_cards[0][0])
-    card2_val = get_score(actual_cards[1][0])
+    if len(actual_cards) < 2:
+        return "Not enough cards to split."
 
-    if card1_val != card2_val:
-        return f"Values do not match: {actual_cards[0][0]} vs {actual_cards[1][0]}"
+    if not allow_any_split:
+        card1_val = get_score(actual_cards[0][0])
+        card2_val = get_score(actual_cards[1][0])
 
-    original_bet = 0
-    for card in current_hand:
-        if isinstance(card, tuple) and card[1] == "BET":
-            original_bet = card[0]
-            break
+        if card1_val != card2_val:
+            return f"Values do not match: {actual_cards[0][0]} vs {actual_cards[1][0]}"
 
-    if chips < original_bet:
-        return "Not enough chips to split."
+    original_bet = next(
+        card[0] for card in current_hand
+        if isinstance(card, tuple) and card[1] == "BET"
+    )
 
-    chips -= original_bet
+    if not allow_any_split:
+        if chips < original_bet:
+            return "Not enough chips to split."
+        chips -= original_bet
 
-    card_to_move = actual_cards.pop()
+    card_to_move = actual_cards[-1]  # last card
     current_hand.remove(card_to_move)
 
-    new_hand_index = len(hands)  
-    new_hand = [card_to_move, (original_bet, "BET")]
+    new_hand_index = len(hands)
+
+    new_hand = [
+        (original_bet, "BET"),
+        card_to_move
+    ]
+
     hands.append(new_hand)
-    
-    scores.append(get_score(card_to_move[0])) 
-    
-    actual_cards_remaining = [c for c in current_hand if isinstance(c, tuple) and c[1] != "BET"]
-    scores[active_hand_index] = sum(get_score(c[0]) for c in actual_cards_remaining)
-    
-    draw_card(active_hand_index)
-    draw_card(new_hand_index)
-    
+
+    scores.append(get_score(card_to_move[0]))
+
+    remaining_cards = [
+        c for c in current_hand
+        if isinstance(c, tuple) and c[1] != "BET"
+    ]
+    scores[active_hand_index] = sum(get_score(c[0]) for c in remaining_cards)
+
+    #draw_card(active_hand_index)
+    #draw_card(new_hand_index)
+
     return "Split successful."
 
 def stand():
@@ -364,36 +388,39 @@ def game_over():
         str: A message indicating the winner, or "GAME_OVER" if the player has no chips left.
     """
     global chips, debt
-    player_score = scores[1]
     dealer_score = scores[0]
+    total_reward = 0
 
-    bet_amount = 0
-    for card in hands[1]:
-        if isinstance(card, tuple) and len(card) == 2 and card[1] == "BET":
-            bet_amount = card[0]
-            break
+    for i in range(1, len(hands)):
+        hand = hands[i]
+        player_score = scores[i]
 
-    # Calculate what chips were before the bet was placed
-    chips_before_bet = chips + bet_amount
+        # Find bet for this hand
+        bet_amount = next(
+            (card[0] for card in hand if isinstance(card, tuple) and card[1] == "BET"),
+            0
+        )
+        chips_before_bet = chips + bet_amount
 
-    if dealer_score > 21:
-        chips += bet_amount * 2
-        winner = "Player wins! Dealer busted"
-    elif player_score > 21:
-        winner = "Dealer wins! Player busted"
-    elif player_score > dealer_score:
-        chips += bet_amount * 2
-        winner = "Player wins!"
-    elif dealer_score > player_score:
-        winner = "Dealer wins!"
-    else:
-        chips += bet_amount
-        winner = "It's a tie!"
+        if dealer_score > 21:
+            total_reward += bet_amount * 2
+            winner = "Player wins! Dealer busted"
+        elif player_score > 21:
+            winner = "Dealer wins! Player busted"
+        elif player_score > dealer_score:
+            total_reward += bet_amount * 2
+            winner = "Player wins!"
+        elif dealer_score > player_score:
+            winner = "Dealer wins!"
+        else:
+            total_reward += bet_amount
+            winner = "It's a tie!"
+        
+        chips += total_reward
+        chips_change = chips - chips_before_bet
+        debt -= chips_change
 
-    # Calculate change in chips relative to before the bet and update debt accordingly
-    chips_change = chips - chips_before_bet
-    debt -= chips_change
-
+        # Om spelaren har 0 chips efter detta, signalera GAME_OVER
     if chips <= 0:
         return "GAME_OVER"
     
@@ -507,30 +534,90 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
             next_turn(winner)
             return game_state(winner, game_over=True)
             # resets turn
-        case 3:  # Venus Major, increase bet by 1.5x for each heart in hand.
-            return sum(
-                1 for value, suit in hands[1] if suit == "HEARTS"
-            )  # MAKE INCREASE ACTUAL BET
+        case 3:  # Venus Major
+            hand = hands[active_hand_index]
+            heart_count = sum(1 for value, suit in hand if isinstance(value, str) and suit == "HEARTS")
+            current_bet, _ = next(card for card in hand if card[1] == "BET")
+            new_bet = int(current_bet * (1.5 ** heart_count))
+            for i, card in enumerate(hand):
+                if card[1] == "BET":
+                    hand[i] = (new_bet, "BET")
+                break
+            return game_state()
         case 4:  # Earth Major, split any hand
-            pass
+            split(allow_any_split=True)
+            return game_state()
         case 5:  # Mars Major, destroy dealers card
             powerup_info = f"Dealers {hands[0][1]} has been obliterated!!!"
             card_value, suit = hands[0][1]
             scores[0] -= get_score(card_value)
             del hands[0][1]
             return game_state()
-        case 6:  # Jupter Major, search next 7 cards, draw the one that gets you closest to 21.
-            pass
-        case (
-            7
-        ):  # Saturn Major, next time you go over 21, loop back around from 1 and up.
-            pass
+        case 6:  # Jupiter Major, examine next 7 cards, pick the one that brings active hand closest to 21
+            checked_cards = []
+            best_card_index = 0
+            best_score = 0
+
+            current_score = scores[active_hand_index]
+            limit = min(7, len(deck))
+
+            for i in range(limit):
+                card = deck[i]
+                # Account for ACE as both 11 and 1
+                potential_scores = []
+                if card[0] == "ACE":
+                    potential_scores = [current_score + 11, current_score + 1]
+                elif card[0] in VALUE_MAP:
+                    potential_scores = [current_score + VALUE_MAP[card[0]]]
+                else:
+                    potential_scores = [current_score + get_score(card[0]) for card in next_seven_cards if card[0] != "JOKER"]
+
+                for s in potential_scores:
+                    if s <= 21 and s > best_score:
+                        best_score = s
+                        best_card_index = i
+
+                checked_cards.append(card)
+
+            rotate_deck(best_card_index)
+            powerup_info = checked_cards
+            return game_state()
+
+        case 7:  # Saturn Major, next time you go over 21, loop back around from 1 and up.
+            global saturn_active
+            saturn_active = True
+            return game_state()
+
         case 8:  # Uranus Major, randomize all cards both hands.
-            pass
+            player_hand = hands[active_hand_index]
+            dealer_hand = hands[0]
+
+            player_bets = [card for card in player_hand if isinstance(card, tuple) and card[1] == "BET"]
+            player_cards = [card for card in player_hand if not (isinstance(card, tuple) and card[1] == "BET")]
+
+            dealer_bets = [card for card in dealer_hand if isinstance(card, tuple) and card[1] == "BET"]
+            dealer_cards = [card for card in dealer_hand if not (isinstance(card, tuple) and card[1] == "BET")]
+
+            hands[active_hand_index] = player_bets + dealer_cards
+            hands[0] = dealer_bets + player_cards
+
+            recalculate_score(active_hand_index)
+            recalculate_score(0)
+
+            return game_state()
         case 9:  # Neptune Major, search cards until you find one that wont make you bust then draw.
-            pass
-        case 10:  # Pluto Major, triple down on any hand.
-            pass
+            current_score = scores[active_hand_index]
+            draw_index = 0
+            for i, card in enumerate(deck):
+                val = get_score(card[0])
+                if current_score + val <= 21:
+                    draw_index = i
+                    break
+            rotate_deck(draw_index)
+            return game_state()
+        case 10:  # Pluto Major, gain a joker.
+            deck.appendleft(("JOKER", "BLACK"))
+            return game_state()
         case 11:  # Sun Minor, show next card.
             return deck[0]
         case 12:  # Moon Minor,

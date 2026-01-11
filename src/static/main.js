@@ -422,8 +422,10 @@ async function usePowerUp(num) {
         case 1:
             powerup1(data);
             break;
+        case 6, 9, 10:
+            hit();
         default:
-            console.log("Fix this powerup: " + num)
+            console.log("Powerup is backend only: " + num)
     }
 
     handleGameState(data);
@@ -505,7 +507,7 @@ const IMAGES = {
         5: "static/assets/Mars.png",
         6: "static/assets/Jupiter.png",
         7: "static/assets/Saturn.png",
-        8: "static/Uranus.png",
+        8: "static/assets/Uranus.png",
         9: "static/assets/Neptune.png",
         10: "static/assets/Pluto.png"
     }
