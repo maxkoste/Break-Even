@@ -193,22 +193,7 @@ def hit():
 
     Ends the round if the player busts.
     """
-    hand_index = logic.active_hand_index
-    busted = logic.draw_card(hand_index)
-
-    if busted:
-        # If there are more split hands, move to the next one instead of ending the round
-        if hand_index < len(logic.hands) - 1:
-            logic.active_hand_index += 1
-            return jsonify(logic.game_state())
-
-        winner = logic.game_over()
-        result = logic.game_state(winner, game_over=True)
-        logic.next_turn(winner)
-        return jsonify(result)
-
-    return jsonify(logic.game_state())
-
+    return jsonify(logic.perform_hit())
 
 @app.route("/api/stand")
 def stand():
@@ -261,10 +246,9 @@ def draw_card_by_index():
     """
     data = request.get_json()
     index = data.get("index")
-    logic.rotate_deck(index)
-
-    return hit()
-
+    if not isinstance(index, int) or index < 0:
+        return jsonify({"error": "Invalid index"}), 400
+    return jsonify(logic.perform_hit(rotate_amount=index))
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

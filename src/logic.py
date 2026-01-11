@@ -14,6 +14,7 @@ celestial_data = None
 player_sign= None
 active_hand_index = 1
 saturn_active = False
+hand_adjustments = [0, 0]
 
 VALUE_MAP = {
     "ACE": 11,
@@ -82,21 +83,17 @@ def draw_card(hand_index):
         bool: True if the hand's score exceeds 21, otherwise False.
     """
     global hands, scores, deck
-
     if hand_index == 0:
-        while deck[0][0] == "JOKER":
+        while deck and deck[0][0] == "JOKER":
             deck.rotate(1)
-
+    if not deck:
+        return False
     card = deck.popleft()
     hands[hand_index].append(card)
-
     if card[0] == "JOKER" and hand_index != 0:
-        powerups.append(random.choice(range(0, 4)))
-
+        powerups.append(random.choice(range(0, 11)))
     recalculate_score(hand_index)
-
     return scores[hand_index] > 21
-
 
 def recalculate_score(hand_index):
     """
@@ -108,34 +105,47 @@ def recalculate_score(hand_index):
         hand_index (int): Index of the hans (0 = dealer, 1 = player).
     """
     global saturn_active
-    score = 0
+    raw_score = 0
     aces = 0
-
     for card in hands[hand_index]:
-        # 🔹 Hoppa över bets
+        # Skip bets
         if isinstance(card, tuple) and card[1] == "BET":
             continue
-
         value, suit = card
-
         if value == "ACE":
-            score += 11
+            raw_score += 11
             aces += 1
         elif value in VALUE_MAP:
-            score += VALUE_MAP[value]
+            raw_score += VALUE_MAP[value]
         elif value != "JOKER":
-            score += int(value)
-
-    while score > 21 and aces > 0:
-        score -= 10
+            raw_score += int(value)
+    while raw_score > 21 and aces > 0:
+        raw_score -= 10
         aces -= 1
-
+    score = raw_score - hand_adjustments[hand_index]
     scores[hand_index] = score
-
-    if scores[hand_index] > 21 and saturn_active:
-        scores[hand_index] = (scores[hand_index] - 1) % 21 + 1
+    if scores[hand_index] > 21 and saturn_active and hand_index != 0:
+        additional = ((scores[hand_index] - 1) // 21) * 21
+        hand_adjustments[hand_index] += additional
+        scores[hand_index] -= additional
         saturn_active = False
 
+def perform_hit(rotate_amount=None):
+    global active_hand_index
+    if rotate_amount is not None:
+        rotate_deck(rotate_amount)
+    if not deck_ready():
+        return {"error": "Deck not initialized"}
+    busted = draw_card(active_hand_index)
+    if busted:
+        if active_hand_index < len(hands) - 1:
+            active_hand_index += 1
+            return game_state()
+        winner = game_over()
+        result = game_state(winner, game_over=True)
+        next_turn(winner)
+        return result
+    return game_state()
 
 def set_celestial_data(data):
     """
@@ -232,11 +242,12 @@ def reset_game():
     Restores chips, clears hands and scores, resets powerups,
     and marks the game as not started
     """
-    global chips, hands, scores, game_started, powerups, active_hand_index, debt
+    global chips, hands, scores, hand_adjustments, game_started, powerups, powerup_info, active_hand_index, debt
     chips = 250
     debt = 10000
     hands = [[], []]
     scores = [0, 0]
+    hand_adjustments = [0, 0]
     powerups = []
     powerup_info = []
     game_started = False
@@ -256,13 +267,11 @@ def split(allow_any_split=False):
     - No value check
     - Free bet on new hand
     """
-    global hands, chips, scores, active_hand_index
-
+    global hands, chips, scores, active_hand_index, hand_adjustments
     if active_hand_index >= len(hands):
         return "Invalid hand index for split."
-
+    
     current_hand = hands[active_hand_index]
-
     # Extract cards (ignore BET)
     actual_cards = [
         card for card in current_hand
@@ -271,50 +280,37 @@ def split(allow_any_split=False):
 
     if not allow_any_split and len(actual_cards) != 2:
         return "You need exactly 2 cards to split."
-
+    
     if len(actual_cards) < 2:
         return "Not enough cards to split."
-
+    
     if not allow_any_split:
         card1_val = get_score(actual_cards[0][0])
         card2_val = get_score(actual_cards[1][0])
-
         if card1_val != card2_val:
             return f"Values do not match: {actual_cards[0][0]} vs {actual_cards[1][0]}"
-
+    
     original_bet = next(
         card[0] for card in current_hand
         if isinstance(card, tuple) and card[1] == "BET"
     )
-
+    
     if not allow_any_split:
         if chips < original_bet:
             return "Not enough chips to split."
         chips -= original_bet
-
+    
     card_to_move = actual_cards[-1]  # last card
     current_hand.remove(card_to_move)
-
-    new_hand_index = len(hands)
-
     new_hand = [
         (original_bet, "BET"),
         card_to_move
     ]
-
     hands.append(new_hand)
-
     scores.append(get_score(card_to_move[0]))
-
-    remaining_cards = [
-        c for c in current_hand
-        if isinstance(c, tuple) and c[1] != "BET"
-    ]
-    scores[active_hand_index] = sum(get_score(c[0]) for c in remaining_cards)
-
-    #draw_card(active_hand_index)
-    #draw_card(new_hand_index)
-
+    hand_adjustments.append(0)
+    recalculate_score(active_hand_index)
+    recalculate_score(len(hands) - 1)    
     return "Split successful."
 
 def stand():
@@ -444,18 +440,16 @@ def game_state(winner=None, game_over=False):
     active_player_index = max(active_hand_index - 1, 0)
 
     return {
-        "player": hands[1],
         "player_hands": player_hand_slice,
         "player_scores": [scores[i] for i in range(1, len(scores))],
         "active_hand_index": active_player_index,
         "dealer": hands[0],
-        "player_score": scores[1],
         "dealer_score": scores[0],
         "chips": chips,
         "debt": debt,
         "powerups": powerups,
         "powerup_info": powerup_info,
-        "player_sign" : player_sign,
+        "player_sign": player_sign,
         "game_started": game_started,
         "game_over": game_over,
         "winner": winner,
@@ -469,10 +463,11 @@ def next_turn(winner):
     Args:
         winner (str): The winner of the previous round (unused in this function.)
     """
-    global hands, scores, active_hand_index
+    global hands, scores, hand_adjustments, active_hand_index
 
     hands = [[], []]
     scores = [0, 0]
+    hand_adjustments = [0, 0]
     active_hand_index = 1
 
 
@@ -499,27 +494,23 @@ def rotate_deck(index):
     deck.rotate(-index)
 
 
-def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
+def use_powerup(powerup_index):  # 0-10 Major, 11-21 Minor
     """
     Applies a selected power-up to the current game state.
-
     The effect depends on the power-up index:
     - 0-10: Major power-ups
     - 11-21: Minor power-ups
-
     Some power-ups may return values such as cards or counts
     depending on their effect.
-
     Args:
         powerup_index (int): The index of the power-up to use.
-
     Returns:
-        Optional[any]: Some power-ups return additional info
-        (e.g., a card or count), others return None.
+        dict: Updated game state after applying the powerup.
     """
-    global powerup_info, scores, chips
+    global powerup_info, scores, chips, saturn_active
+    if powerup_index not in powerups:
+        return {"error": "Powerup not available"}
     powerups.remove(powerup_index)
-
     match powerup_index:
         case 0:  # Sun Major, show hidden dealer card.
             powerup_info = hands[0][0]
@@ -527,27 +518,29 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
         case 1:  # Moon Major, look at the next card, draw it or the one after.
             powerup_info = deck[0]
             return game_state()
-         # Helper method called after user picks, use deck.rotate
-        case 2:  # Mercury Major,
+        case 2:  # Mercury Major, reset turn
             scores = [0, 0]
             winner = game_over()
             next_turn(winner)
             return game_state(winner, game_over=True)
-            # resets turn
         case 3:  # Venus Major
             hand = hands[active_hand_index]
             heart_count = sum(1 for value, suit in hand if isinstance(value, str) and suit == "HEARTS")
-            current_bet, _ = next(card for card in hand if card[1] == "BET")
+            current_bet = next(card[0] for card in hand if card[1] == "BET")
             new_bet = int(current_bet * (1.5 ** heart_count))
             for i, card in enumerate(hand):
                 if card[1] == "BET":
                     hand[i] = (new_bet, "BET")
-                break
+                    break
             return game_state()
         case 4:  # Earth Major, split any hand
-            split(allow_any_split=True)
+            result = split(allow_any_split=True)
+            if "successful" not in result:
+                return {"error": result}
             return game_state()
         case 5:  # Mars Major, destroy dealers card
+            if len(hands[0]) < 2:
+                return {"error": "No card to destroy"}
             powerup_info = f"Dealers {hands[0][1]} has been obliterated!!!"
             card_value, suit = hands[0][1]
             scores[0] -= get_score(card_value)
@@ -557,89 +550,64 @@ def use_powerup(powerup_index):  # 0-10 Major, 10-21 Minor
             checked_cards = []
             best_card_index = 0
             best_score = 0
-
             current_score = scores[active_hand_index]
             limit = min(7, len(deck))
-
             for i in range(limit):
                 card = deck[i]
-                # Account for ACE as both 11 and 1
                 potential_scores = []
                 if card[0] == "ACE":
                     potential_scores = [current_score + 11, current_score + 1]
                 elif card[0] in VALUE_MAP:
                     potential_scores = [current_score + VALUE_MAP[card[0]]]
                 else:
-                    potential_scores = [current_score + get_score(card[0]) for card in next_seven_cards if card[0] != "JOKER"]
-
+                    try:
+                        val = int(card[0])
+                        potential_scores = [current_score + val]
+                    except ValueError:
+                        continue  # Skip invalid/JOKER?
                 for s in potential_scores:
                     if s <= 21 and s > best_score:
                         best_score = s
                         best_card_index = i
-
                 checked_cards.append(card)
-
             rotate_deck(best_card_index)
             powerup_info = checked_cards
-            return game_state()
-
+            return perform_hit()  # Draw the best card now at top
         case 7:  # Saturn Major, next time you go over 21, loop back around from 1 and up.
-            global saturn_active
             saturn_active = True
             return game_state()
-
-        case 8:  # Uranus Major, randomize all cards both hands.
+        case 8:  # Uranus Major, swap all cards both hands.
             player_hand = hands[active_hand_index]
             dealer_hand = hands[0]
-
             player_bets = [card for card in player_hand if isinstance(card, tuple) and card[1] == "BET"]
             player_cards = [card for card in player_hand if not (isinstance(card, tuple) and card[1] == "BET")]
-
             dealer_bets = [card for card in dealer_hand if isinstance(card, tuple) and card[1] == "BET"]
             dealer_cards = [card for card in dealer_hand if not (isinstance(card, tuple) and card[1] == "BET")]
-
             hands[active_hand_index] = player_bets + dealer_cards
             hands[0] = dealer_bets + player_cards
-
             recalculate_score(active_hand_index)
             recalculate_score(0)
-
             return game_state()
         case 9:  # Neptune Major, search cards until you find one that wont make you bust then draw.
             current_score = scores[active_hand_index]
             draw_index = 0
             for i, card in enumerate(deck):
                 val = get_score(card[0])
-                if current_score + val <= 21:
+                if current_score + val <= 21 and card[0] != "JOKER":  # Assuming skip JOKER if it doesn't add value
                     draw_index = i
                     break
             rotate_deck(draw_index)
-            return game_state()
+            return perform_hit()  # Draw the safe card now at top
         case 10:  # Pluto Major, gain a joker.
             deck.appendleft(("JOKER", "BLACK"))
-            return game_state()
+            return perform_hit()
         case 11:  # Sun Minor, show next card.
-            return deck[0]
-        case 12:  # Moon Minor,
             pass
-        case 13:  # Mercury Minor,
+        case 12:  # Moon Minor (placeholder)
             pass
-        case 14:  # Venus Minor,
-            pass
-        case 15:  # Earth Minor,
-            pass
-        case 16:  # Mars Minor,
-            pass
-        case 17:  # Jupiter Minor,
-            pass
-        case 18:  # Saturn Minor,
-            pass
-        case 19:  # Uranus Minor,
-            pass
-        case 20:  # Neptune Minor,
-            pass
-        case 21:  # Pluto Minor,
+        case 13:  # Mercury Minor (placeholder)
             pass
         case _:
             print("Incorrect power-up value")
-
+            return {"error": "Invalid powerup"}
+    return game_state() 

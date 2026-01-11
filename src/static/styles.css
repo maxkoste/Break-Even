@@ -12,7 +12,7 @@ h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.game-button {
+.game-button, .deck-button {
     background-color: #c41e3a;; 
     color: white;
     padding: 15px 32px;
@@ -27,28 +27,9 @@ h1 {
     
 }
 
-.game-button:hover {
+.game-button:hover, .deck-button:hover {
     background-color: #a01729;
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4); 
-}
-
-.deck-button {
-    background-color: #c41e3a;; 
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    font-size: 16px;
-    font-family: Georgia, serif;
-    border: 3px solid gold;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-.deck-button:hover {
-    background-color: #a01729; 
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
 }
 
 #powerupModal .modal-content {
@@ -80,10 +61,11 @@ h1 {
 }
 
 .powerup-icon {
-    width: 48px;
+    width: auto;
     height: 48px;
     image-rendering: pixelated;
     pointer-events: none;
+    object-fit: contain;
 }
 
 .cards-container {
@@ -204,8 +186,9 @@ h1 {
 }
 
 .event-powerup-item img {
-    width: 64px;
+    width: auto;
     height: 64px;
+    object-fit: contain;
 }
 
 #playerHandsContainer {

@@ -88,11 +88,7 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const data = await callGameApi("/api/state");
 
-            const currentBet = extractBet(data.player);
-
-            handleGameState(data, false);
-            populateBetDropdown(data.chips);
-            updateBankUI(data.chips, currentBet, data.debt);
+            handleGameState(data, true);
         });
     </script>
 </body>

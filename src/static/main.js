@@ -6,52 +6,43 @@ let shownEvents = new Set();
 
 /**
  * Requests the user's current geographic location.
- * Displays an error message if geolocation is not supported.
- *
- * @returns {void}
  */
 function getLocation() {
-  if (!navigator.geolocation) {
-    x.textContent = "Geolocation is not supported by this browser.";
-    return;
-  }
-
-  return navigator.geolocation.getCurrentPosition(success, handleError);
+    if (!navigator.geolocation) {
+        x.textContent = "Geolocation is not supported by this browser.";
+        return;
+    }
+    return navigator.geolocation.getCurrentPosition(success, handleError);
 }
 
 /**
  * Handles a successful geolocation request.
- *
- * @param {GeolocationPosition} position - The user's current position.
  */
 function success(position) {
-  const { latitude, longitude, altitude } = position.coords;
-
-  x.innerHTML =
-    `Latitude: ${latitude}<br>` +
-    `Longitude: ${longitude}<br>` +
-    `Altitude: ${altitude ?? "Not available"}`;
+    const { latitude, longitude, altitude } = position.coords;
+    x.innerHTML =
+        `Latitude: ${latitude}<br>` +
+        `Longitude: ${longitude}<br>` +
+        `Altitude: ${altitude ?? "Not available"}`;
 }
 
 /**
  * Handles errors from the geolocation API.
- *
- * @param {GeolocationPositionError} err - The error object.
  */
 function handleError(err) {
-  switch (err.code) {
-    case err.PERMISSION_DENIED:
-      x.textContent = "User denied the request for Geolocation.";
-      break;
-    case err.POSITION_UNAVAILABLE:
-      x.textContent = "Location information is unavailable.";
-      break;
-    case err.TIMEOUT:
-      x.textContent = "The request to get user location timed out.";
-      break;
-    default:
-      x.textContent = "An unknown error occurred.";
-  }
+    switch (err.code) {
+        case err.PERMISSION_DENIED:
+            x.textContent = "User denied the request for Geolocation.";
+            break;
+        case err.POSITION_UNAVAILABLE:
+            x.textContent = "Location information is unavailable.";
+            break;
+        case err.TIMEOUT:
+            x.textContent = "The request to get user location timed out.";
+            break;
+        default:
+            x.textContent = "An unknown error occurred.";
+    }
 }
 
 /**
@@ -71,24 +62,19 @@ function updateBankUI(chips, bet, debt) {
 
 /**
  * Extracts the bet amount from the player's hand.
- *
- * @param {Array} playerHand - The player's hand including bet entries.
- * @returns {number} The bet amount or 0 if none exists.
  */
-function extractBet(playerHand) {
-    if (!Array.isArray(playerHand) || playerHand.length === 0) {
+function extractBet(hands) {
+    if (!Array.isArray(hands) || hands.length === 0) {
         return 0;
     }
-
-    const betEntry = playerHand.find(([value, suit]) => suit === "BET");
-    return betEntry ? betEntry[0] : 0;
+    return hands.reduce((sum, hand) => {
+        const betEntry = hand.find(([, suit]) => suit === "BET");
+        return sum + (betEntry ? betEntry[0] : 0);
+    }, 0);
 }
 
 /**
  * Populates the bet dropdown based on available chips.
- *
- * @param {number} chips - The player's available chips.
- * @param {number|null} selectedBet - The currently selected bet.
  */
 function populateBetDropdown(chips, selectedBet = null) {
     const select = document.getElementById("betSelect");
@@ -116,22 +102,12 @@ function populateBetDropdown(chips, selectedBet = null) {
 
 /**
  * Calls a backend API endpoint and returns the JSON response.
- *
- * @param {string} url - The API endpoint.
- * @param {Object} options - Fetch options.
- * @returns {Promise<Object>} The parsed JSON response.
  */
 async function callGameApi(url, options = {}) {
     const response = await fetch(url, options);
     return await response.json();
 }
 
-/**
- * Updates the game UI based on the current game state.
- *
- * @param {Object} data - The game state returned from the backend.
- * @param {boolean} resetDropdown - Whether to reset the bet dropdown.
- */
 function debug(data) {
     //const el = document.getElementById("output");
     //if (el) el.textContent = JSON.stringify(data, null, 2);
@@ -141,38 +117,25 @@ function powerupsModal(powerups) {
     populateModalButtonsFromArray(powerups);
 }
 
-function dealerCards(dealer, gameStarted, gameOver) {
+function dealerCards(data) {
+    const dealer = data.dealer;
+    const gameStarted = data.game_started;
+    const gameOver = data.game_over;
+
     if (dealer) {
         const hideDealerCard = gameStarted && !gameOver;
         renderCards("dealerCards", dealer, hideDealerCard);
-    }
-}
 
-function scores(data) {
-    const dealerScoreEl = document.getElementById("dealerScore");
-
-    if (Array.isArray(data.player_hands)) {
-        data.player_hands.forEach((hand, index) => {
-            const el = document.getElementById(`playerScore-${index}`);
-            if (el) {
-                const score = calculateHandScore(hand);
-                el.textContent = `Score: ${score}`;
+        const dealerScoreEl = document.getElementById("dealerScore");
+        if (dealerScoreEl) {
+            let scoreText;
+            if (gameStarted && !gameOver) {
+                const visibleScore = calculateVisibleDealerScore(dealer);
+                scoreText = `Score: ${visibleScore}`;
+            } else {
+                scoreText = `Score: ${data.dealer_score}`;
             }
-        });
-    } else if (Array.isArray(data.player)) {
-        const el = document.getElementById("playerScore-0");
-        if (el) {
-            const score = calculateHandScore(data.player);
-            el.textContent = `Score: ${score}`;
-        }
-    }
-
-    if (dealerScoreEl) {
-        if (data.game_started && !data.game_over) {
-            const visibleScore = calculateVisibleDealerScore(data.dealer);
-            dealerScoreEl.textContent = `Score: ${visibleScore}`;
-        } else {
-            dealerScoreEl.textContent = `Score: ${data.dealer_score}`;
+            dealerScoreEl.textContent = scoreText;
         }
     }
 }
@@ -180,16 +143,18 @@ function scores(data) {
 function playerHands(data) {
     const container = document.getElementById("playerHandsContainer");
     if (!container) return;
-    
     container.innerHTML = "";
+
     const handsToRender = data.player_hands || (data.player ? [data.player] : []);
-    
+    const scores = data.player_scores || [];
+
     handsToRender.forEach((hand, index) => {
         const isActive = data.player_hands ? (index === data.active_hand_index) : true;
         const handDiv = document.createElement("div");
         handDiv.className = `hand-section ${isActive ? 'active-hand' : 'inactive-hand'}`;
-        const handScore = calculateHandScore(hand);
-        
+
+        const handScore = scores[index] !== undefined ? scores[index] : 0;
+
         handDiv.innerHTML = `
             <h3>Hand ${index + 1}</h3>
             <div id="playerScore-${index}" class="score">Score: ${handScore}</div>
@@ -202,7 +167,6 @@ function playerHands(data) {
                 ` : ''}
             </div>
         `;
-        
         container.appendChild(handDiv);
         renderCards(`card-${index}`, hand);
     });
@@ -210,8 +174,9 @@ function playerHands(data) {
 
 function bets(data, resetDropdown) {
     const chips = data.chips;
+    const handsToCheck = data.player_hands || (data.player ? [data.player] : []);
     const debt = data.debt;
-    const bet = extractBet(data.player);
+    const bet = extractBet(handsToCheck);
 
     if (resetDropdown) {
         populateBetDropdown(chips, bet);
@@ -237,58 +202,44 @@ function handleRoundState(data) {
 function handleGameState(data, resetDropdown = true) {
     debug(data);
     triggerAnimations(data);
-    triggerEvent("POWERUPS_GAINED", data)
+    triggerEvent("POWERUPS_GAINED", data);
     powerupsModal(data.powerups);
-    dealerCards(data.dealer, data.game_started, data.game_over);
-    scores(data);
+    dealerCards(data);
     playerHands(data);
     bets(data, resetDropdown);
     handleRoundState(data);
 }
 
-/**
- * Updates the UI for an active round.
- */
 function inRoundUI() {
     document.getElementById("startBtn").style.display = "none";
     document.getElementById("controls").style.display = "block";
     document.getElementById("betting").style.display = "none";
 }
 
-/**
- * Updates the UI when a round has ended.
- */
 function endRoundUI() {
     document.getElementById("controls").style.display = "none";
-
     const startBtn = document.getElementById("startBtn");
     startBtn.style.display = "block";
     startBtn.textContent = "New Round";
     startBtn.onclick = startGame;
-
     document.getElementById("betting").style.display = "block";
 }
 
-/**
- * Starts a new game round by placing a bet and dealing cards.
- */
 async function startGame() {
     dealerFirstCardRevealed = false;
+    let bet = 0;
 
-	let bet = 0;
+    try {
+        bet = parseInt(document.getElementById("betSelect").value, 10);
+    } catch (error) {
+        console.log("Value is null - setting bet to 50 for first round");
+        bet = 50;
+    }
 
-	try {
-		bet = parseInt(document.getElementById("betSelect").value, 10);
-	} catch (error) {
-		console.log("Value is null - setting bet to 50 for first round")
-		bet = 50;
-	}
-
-	if (!bet || bet <= 0) {
-		// discard or alert user
-		console.log("No valid bet selected, setting it to 50");
-		bet = 50;
-	}
+    if (!bet || bet <= 0) {
+        console.log("No valid bet selected, setting it to 50");
+        bet = 50;
+    }
 
     const data = await callGameApi("/api/deal", {
         method: "POST",
@@ -299,51 +250,36 @@ async function startGame() {
     handleGameState(data, false);
 }
 
-/**
- * Initializes the game by sending player data and fetching mashup API data.
- */
-async function initGameState(){
-
-	const currentLocation = getLocation();
-
-	const currentLocationJson = JSON.stringify(currentLocation);
-
+async function initGameState() {
+    const currentLocation = getLocation();
+    const currentLocationJson = JSON.stringify(currentLocation);
     const select = document.getElementById("sign");
     const selectedSign = select.value;
 
-	const gameData = await callGameApi("/api/init-game-state", {
-		method: "POST",
-		headers: {"Content-Type": "application/json"},
-		body: JSON.stringify({ selectedSign })
-	});
+    const gameData = await callGameApi("/api/init-game-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedSign })
+    });
 
-	localStorage.setItem("gameData", JSON.stringify(gameData));
+    localStorage.setItem("gameData", JSON.stringify(gameData));
+    const savedDataString = localStorage.getItem("gameData");
 
-	const savedDataString = localStorage.getItem("gameData");
+    if (savedDataString) {
+        console.log(savedDataString);
+    } else {
+        console.log("No saved data :( ");
+    }
 
-	if (savedDataString) {
-		// const savedData = JSON.parse(savedDataString);
-		console.log(savedDataString);
-	} else{
-		console.log("No saved data :( ")
-	}
-
-    window.location.href="/game";
-
+    window.location.href = "/game";
     triggerEvent("POWERUPS_GAINED", gameData);
 }
 
-/**
- * Requests a hit action from the backend.
- */
 async function hit() {
     const data = await callGameApi("/api/hit");
     handleGameState(data);
 }
 
-/**
- * Requests a stand action from the backend.
- */
 async function stand() {
     const data = await callGameApi("/api/stand");
     handleGameState(data);
@@ -352,62 +288,33 @@ async function stand() {
 async function split() {
     const data = await callGameApi("/api/split", { method: "POST" });
     if (data.error) {
-        alert(data.error); 
+        alert(data.error);
     } else {
         handleGameState(data);
     }
 }
 
-/**
- * Creates buttons for available power-ups.
- *
- * @param {number[]} numbers - List of available power-up IDs.
- */
 function populateModalButtonsFromArray(numbers) {
     const container = document.getElementById("modalButtons");
     container.innerHTML = "";
-
     const uniqueNumbers = [...new Set(numbers)];
 
     uniqueNumbers.forEach(num => {
         const btn = document.createElement("button");
         btn.className = "game-button m-1";
         btn.type = "button";
-
-        const imgPath = IMAGES.POWERUP[num];
-        const name = imgPath.split("/").pop().replace(".png", "");
-
-        const img = document.createElement("img");
-        img.src = imgPath;
-        img.alt = name;
-        img.className = "powerup-icon";
-
-        const label = document.createElement("div");
-        label.className = "powerup-label";
-        label.textContent = name;
-
-        btn.appendChild(img);
-        btn.appendChild(label)
-
+        const item = createPowerupItem(num);
+        btn.appendChild(item);
         btn.onclick = () => {
             const modalEl = document.getElementById("powerupModal");
-            const modal =
-                bootstrap.Modal.getInstance(modalEl) ||
-                new bootstrap.Modal(modalEl);
-
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
             modal.hide();
             usePowerUp(num);
         };
-
         container.appendChild(btn);
     });
 }
 
-/**
- * Uses a selected power-up.
- *
- * @param {number} num - The power-up ID.
- */
 async function usePowerUp(num) {
     const data = await callGameApi("/api/use_powerup", {
         method: "POST",
@@ -417,88 +324,23 @@ async function usePowerUp(num) {
 
     switch (num) {
         case 0:
-            powerup0(data)
+            powerup0(data);
             break;
         case 1:
             powerup1(data);
             break;
-        case 6, 9, 10:
-            hit();
         default:
-            console.log("Powerup is backend only: " + num)
+            console.log("Powerup handled in backend: " + num);
     }
-
     handleGameState(data);
 }
 
+const SUITS = ['HEARTS', 'CLUBS', 'DIAMONDS', 'SPADES'];
+const VALUES = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const IMAGES = {
-    "HEARTS": {
-        "ACE": "static/assets/AH.png",
-        "2": "static/assets/2H.png",
-        "3": "static/assets/3H.png",
-        "4": "static/assets/4H.png",
-        "5": "static/assets/5H.png",
-        "6": "static/assets/6H.png",
-        "7": "static/assets/7H.png",
-        "8": "static/assets/8H.png",
-        "9": "static/assets/9H.png",
-        "10": "static/assets/TH.png",
-        "J": "static/assets/JH.png",
-        "Q": "static/assets/QH.png",
-        "K": "static/assets/KH.png"
-    },
-    "CLUBS": {
-        "ACE": "static/assets/AC.png",
-        "2": "static/assets/2C.png",
-        "3": "static/assets/3C.png",
-        "4": "static/assets/4C.png",
-        "5": "static/assets/5C.png",
-        "6": "static/assets/6C.png",
-        "7": "static/assets/7C.png",
-        "8": "static/assets/8C.png",
-        "9": "static/assets/9C.png",
-        "10": "static/assets/TC.png",
-        "J": "static/assets/JC.png",
-        "Q": "static/assets/QC.png",
-        "K": "static/assets/KC.png",
-	},
-    "DIAMONDS": {
-        "ACE": "static/assets/AD.png",
-        "2": "static/assets/2D.png",
-        "3": "static/assets/3D.png",
-        "4": "static/assets/4D.png",
-        "5": "static/assets/5D.png",
-        "6": "static/assets/6D.png",
-        "7": "static/assets/7D.png",
-        "8": "static/assets/8D.png",
-        "9": "static/assets/9D.png",
-        "10": "static/assets/TD.png",
-        "J": "static/assets/JD.png",
-        "Q": "static/assets/QD.png",
-        "K": "static/assets/KD.png",
-	},
-    "SPADES": {
-        "ACE": "static/assets/AS.png",
-        "2": "static/assets/2S.png",
-        "3": "static/assets/3S.png",
-        "4": "static/assets/4S.png",
-        "5": "static/assets/5S.png",
-        "6": "static/assets/6S.png",
-        "7": "static/assets/7S.png",
-        "8": "static/assets/8S.png",
-        "9": "static/assets/9S.png",
-        "10": "static/assets/TS.png",
-        "J": "static/assets/JS.png",
-        "Q": "static/assets/QS.png",
-        "K": "static/assets/KS.png",
-	},
-	"JOKER": {
-        "JOKER": "static/assets/Joker.png",
-	},
-    "BACKGROUND": {
-        "BACKGROUND": "static/assets/Background.png",
-    },
-    "POWERUP": {
+    JOKER: { JOKER: "static/assets/Joker.png" },
+    BACKGROUND: { BACKGROUND: "static/assets/Background.png" },
+    POWERUP: {
         0: "static/assets/Sun.png",
         1: "static/assets/Moon.png",
         2: "static/assets/Mercury.png",
@@ -513,9 +355,16 @@ const IMAGES = {
     }
 };
 
+SUITS.forEach(suit => {
+    IMAGES[suit] = {};
+    VALUES.forEach(val => {
+        const code = val === 'J' ? 'J' : val === 'Q' ? 'Q' : val === 'K' ? 'K' : val === '10' ? 'T' : val === 'ACE' ? 'A' : val;
+        IMAGES[suit][val] = `static/assets/${code}${suit[0]}.png`;
+    });
+});
+
 function getCardImageSrc(value, suit) {
     if (suit === "BLACK" || suit === "RED") suit = "JOKER";
-
     if (value === "JACK") value = "J";
     else if (value === "QUEEN") value = "Q";
     else if (value === "KING") value = "K";
@@ -524,28 +373,18 @@ function getCardImageSrc(value, suit) {
     return IMAGES[suit][value];
 }
 
-/**
- * Renders playing cards in a given container.
- *
- * @param {string} containerId - The DOM container ID.
- * @param {Array} cards - List of cards to render.
- * @param {boolean} hideFirst - Whether to hide the first card.
- */
 function renderCards(containerId, cards, hideFirst = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
-
     container.innerHTML = "";
 
     cards
         .filter(([value, suit]) => suit !== "BET" && value !== "JOKER")
         .forEach(([value, suit], index) => {
-
             const img = document.createElement("img");
             img.className = "card";
             img.loading = "eager";
 
-            // Hide dealer's first card
             if (hideFirst && index === 0 && !dealerFirstCardRevealed) {
                 img.src = IMAGES.BACKGROUND.BACKGROUND;
                 img.alt = "Face-down card";
@@ -555,16 +394,13 @@ function renderCards(containerId, cards, hideFirst = false) {
 
             img.src = getCardImageSrc(value, suit);
             img.alt = `${value} of ${suit}`;
-
             container.appendChild(img);
         });
 }
 
 function powerup0(data) {
     const [value, suit] = data.powerup_info;
-
     const dealerCardsContainer = document.getElementById("dealerCards");
-
     const firstCard = dealerCardsContainer.querySelector("img");
 
     if (firstCard) {
@@ -581,13 +417,11 @@ function powerup0(data) {
 
 function powerup1(data) {
     showEventOverlay();
-
     const wrapper = document.createElement("div");
     wrapper.style.display = "flex";
     wrapper.style.gap = "20px";
 
     const [value, suit] = data.powerup_info;
-
     const peekImg = document.createElement("img");
     peekImg.className = "card";
     peekImg.src = getCardImageSrc(value, suit);
@@ -600,37 +434,26 @@ function powerup1(data) {
 
     wrapper.appendChild(peekImg);
     wrapper.appendChild(backImg);
-
     setEventContent(wrapper);
 }
 
 async function draw_card_by_index(index) {
     hideEventOverlay();
-
     const data = await callGameApi("/api/draw_card_by_index", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ index })
     });
-
     handleGameState(data);
 }
 
-/**
- * Calculates the dealer's visible score (excluding hidden card).
- *
- * @param {Array} dealerCards - The dealer's cards.
- * @returns {number} The visible score.
- */
 function calculateVisibleDealerScore(dealerCards) {
     if (!dealerCards || dealerCards.length === 0) return 0;
-
     let score = 0;
     let aces = 0;
 
     for (let i = dealerFirstCardRevealed ? 0 : 1; i < dealerCards.length; i++) {
         const [value] = dealerCards[i];
-
         if (value === "ACE") {
             score += 11;
             aces++;
@@ -641,57 +464,21 @@ function calculateVisibleDealerScore(dealerCards) {
         }
     }
 
-    // Hantera ess
     while (score > 21 && aces > 0) {
         score -= 10;
         aces--;
     }
-
-    return score;
-}
-
-function calculateHandScore(cards) {
-    if (!Array.isArray(cards) || cards.length === 0) return 0;
-
-    let score = 0;
-    let aces = 0;
-
-    for (const card of cards) {
-        if (Array.isArray(card) && card[1] === "BET") continue;
-
-        const value = Array.isArray(card) ? card[0] : null;
-        if (!value) continue;
-
-        if (value === "ACE") {
-            score += 11;
-            aces += 1;
-        } else if (["KING", "QUEEN", "JACK"].includes(value)) {
-            score += 10;
-        } else if (value !== "JOKER") {
-            const n = parseInt(value, 10);
-            if (!isNaN(n)) score += n;
-        }
-    }
-
-    while (score > 21 && aces > 0) {
-        score -= 10;
-        aces -= 1;
-    }
-
     return score;
 }
 
 function triggerAnimations(data) {
-    if (!Array.isArray(data.player)) return;
-
-    const jokerCount = data.player.filter(
-        ([value]) => value === "JOKER"
-    ).length;
+    const handsToCheck = data.player_hands || (data.player ? [data.player] : []);
+    const jokerCount = handsToCheck.reduce((count, hand) =>
+        count + hand.filter(([value]) => value === "JOKER").length, 0);
 
     if (jokerCount > lastJokerCount) {
         showJokerPopup();
     }
-
     lastJokerCount = jokerCount;
 }
 
@@ -699,7 +486,6 @@ function showJokerPopup() {
     const img = document.createElement("img");
     img.src = IMAGES.JOKER.JOKER;
     img.className = "joker-popup";
-
     document.body.appendChild(img);
 
     requestAnimationFrame(() => {
@@ -730,7 +516,6 @@ function setEventContent(node) {
 
 function eventPowerupsGained(data) {
     showEventOverlay();
-
     const wrapper = document.createElement("div");
     wrapper.className = "event-box";
 
@@ -740,42 +525,23 @@ function eventPowerupsGained(data) {
     wrapper.appendChild(title);
 
     const description = document.createElement("p");
-    description.textContent =
-        "The stars align over Vegas, the heavens themselves at your beck and call:";
+    description.textContent = "The stars align over Vegas, the heavens themselves at your beck and call:";
     wrapper.appendChild(description);
 
     const grid = document.createElement("div");
     grid.className = "event-powerup-grid";
 
     data.powerups.forEach(id => {
-        const imgPath = IMAGES.POWERUP[id];
-        const name = imgPath.split("/").pop().replace(".png", "");
-
-        const item = document.createElement("div");
-        item.className = "event-powerup-item";
-
-        const img = document.createElement("img");
-        img.src = imgPath;
-        img.alt = name;
-        img.className = "powerup-icon";
-
-        const label = document.createElement("div");
-        label.textContent = name;
-
-        item.appendChild(img);
-        item.appendChild(label);
-        grid.appendChild(item);
+        grid.appendChild(createPowerupItem(id));
     });
 
     wrapper.appendChild(grid);
-
     const continueBtn = document.createElement("button");
     continueBtn.className = "game-button mt-3";
     continueBtn.textContent = "Continue";
     continueBtn.onclick = hideEventOverlay;
 
     wrapper.appendChild(continueBtn);
-
     setEventContent(wrapper);
 }
 
@@ -787,4 +553,20 @@ function triggerEvent(type, data) {
     if (shownEvents.has(type)) return;
     shownEvents.add(type);
     EVENTS[type]?.(data);
+}
+
+function createPowerupItem(id) {
+    const imgPath = IMAGES.POWERUP[id];
+    const name = imgPath.split("/").pop().replace(".png", "");
+    const item = document.createElement("div");
+    item.className = "event-powerup-item";
+    const img = document.createElement("img");
+    img.src = imgPath;
+    img.alt = name;
+    img.className = "powerup-icon";
+    const label = document.createElement("div");
+    label.textContent = name;
+    item.appendChild(img);
+    item.appendChild(label);
+    return item;
 }
