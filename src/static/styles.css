@@ -195,6 +195,7 @@ h1 {
     display: flex;
     flex-direction: row;
     justify-content: center;
+    gap: 20px;
 }
 
 #resetButton {
@@ -244,4 +245,48 @@ h1 {
 
 .game_over {
     font-size: 32px;
+}
+
+#powerupinfoModal .modal-content {
+    background-color: #0d5c0d; 
+    color: white;
+    font-family: Georgia, serif;
+    border: 3px solid gold;
+    border-radius: 10px;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.5);
+}
+
+#powerupinfoModal .modal-header {
+    border-bottom: 2px solid gold;
+}
+
+#powerupinfoModal .modal-title {
+    color: gold;
+}
+
+#powerupinfoModal .btn-close {
+    filter: invert(1);
+}
+
+#powerupInfo {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    z-index: 998;
+    background-color: #c41e3a;; 
+    color: white;
+    text-align: center;
+    font-size: 35px;
+    border: 3px solid gold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
 }

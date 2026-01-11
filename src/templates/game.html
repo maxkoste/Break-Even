@@ -54,6 +54,7 @@
 
     <!-- Game Control Buttons -->
     <section id="controls" style="display: none;">
+        <button type="button" id="powerupInfo" data-bs-toggle="modal" data-bs-target="#powerupinfoModal">ⓘ</button>
         <!-- Button trigger modal -->
         <button type="button" id="powerupLaunchBtn" class="game-button" data-bs-toggle="modal" data-bs-target="#powerupModal">
           Power-Ups
@@ -61,7 +62,33 @@
     </section>
 
         <!-- Modal -->
-        <div class="modal fade" id="powerupModal" tabindex="-1" role="dialog" aria-labelledby="powerupModalLabel" aria-hidden="true">
+    <div class="modal fade" id="powerupinfoModal" tabindex="-1" role="dialog" aria-labelledby="powerupinfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="powerupinfoModalLabel">Power-Up Info</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+                <div class="modal-body">
+                    <P>Sun: Reveal the hole card</P>
+                    <P>Moon: See the next card then draw it, or a random one</P>
+                    <P>Mercury: Reset the round</P>
+                    <P>Venus: Increase your bet by 1.5x for each heart in hand</P>
+                    <P>Earth: Split any hand</P>
+                    <P>Mars: Destroy the dealers face card</P>
+                    <P>Jupiter: Out of the next 7 cards, draw the optimal one</P>
+                    <P>Saturn: The next time you go over 21, loop back around to 1</P>
+                    <P>Uranus: Swap cards with the dealer</P>
+                    <P>Neptune: Draw a card that wont make you bust</P>
+                    <P>Pluto: Draw a joker</P>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="powerupModal" tabindex="-1" role="dialog" aria-labelledby="powerupModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
             <div class="modal-header">
@@ -74,7 +101,7 @@
             </div>
             </div>
         </div>
-        </div>
+    </div>
     
     <!-- Game Output / Debug Info -->
     <section id="gameOutput">
