@@ -36,6 +36,12 @@ def populate_deck(cards):  # Take data from the API call and place the cards ins
     deck = deque(cards)
 
 def deck_ready():
+    """
+    Checks if the deck has any cards remaining.
+
+    Returns:
+        bool: True if there are cards left in the deck, False otherwise.
+    """
     return bool(deck)
 
 def start_game():
@@ -223,6 +229,17 @@ def reset_game():
     active_hand_index = 1
 
 def split():
+    """
+    Attempts to split the current player hand into two hands.
+
+    Conditions:
+    - The hand must have exactly 2 cards.
+    - The card values must match.
+    - Player must have enough chips to cover the additional bet.
+
+    Returns:
+        str: Success message if split is allowed, otherwise an error message.
+    """
     global hands, chips, scores, active_hand_index
     
     if active_hand_index >= len(hands):
@@ -270,6 +287,14 @@ def split():
     return "Split successful."
 
 def stand():
+    """
+    Ends the current player's turn. 
+
+    Moves to the next hand if the player has split hands, otherwise lets the dealer play.
+
+    Returns:
+        dict: Updated game state after the player's or dealer's turn.
+    """
     global active_hand_index
     # Move to the next hand if there are more split hands
     if active_hand_index < len(hands) - 1:
