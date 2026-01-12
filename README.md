@@ -47,7 +47,8 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 
 **Backend:**  
 - Python  
-- Deck of Cards API  
+- Deck of Cards API
+- Astronomy API
 - Returns hand results, updated balance, and game state  
 
 
