@@ -62,9 +62,9 @@ def init_game_state():
 
     #This is the mashup api endpoint that gives the user combined data from the api:s
     return {
-        "Celestial Data" : celestial_data,
-        "Deck Ready": True,
-        "Game State": logic.game_state()
+        "celestial_data" : celestial_data,
+        "deck_ready": True,
+        "game_state": logic.game_state()
     }
 
 
@@ -77,7 +77,7 @@ def reset():
     return redirect("/")
 
 
-@app.route("/api/state")  # This route should not exist. Proper initial load method preferred.
+@app.route("/api/state")
 def state():
     """
     Returns the current game state as JSON.

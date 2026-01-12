@@ -266,8 +266,6 @@ async function startGame() {
 }
 
 async function initGameState() {
-    const currentLocation = getLocation();
-    const currentLocationJson = JSON.stringify(currentLocation);
     const select = document.getElementById("sign");
     const selectedSign = select.value;
 
@@ -278,16 +276,10 @@ async function initGameState() {
     });
 
     localStorage.setItem("gameData", JSON.stringify(gameData));
-    const savedDataString = localStorage.getItem("gameData");
 
-    if (savedDataString) {
-        console.log(savedDataString);
-    } else {
-        console.log("No saved data :( ");
-    }
+	console.log("printing Game data from initGameFunction " + gameData);
 
     window.location.href = "/game";
-    triggerEvent("POWERUPS_GAINED", gameData);
 }
 
 async function hit() {
@@ -567,7 +559,7 @@ function eventPowerupsGained(data) {
 
     const title = document.createElement("h3");
     const name = data.player_sign;
-    title.textContent = "Celestial Guidance | " + name[0].toUpperCase() + name.slice(1) + " |";
+	title.textContent = "Celestial Guidance | " + name[0].toUpperCase() + name.slice(1) + " |";
     wrapper.appendChild(title);
 
     const description = document.createElement("p");

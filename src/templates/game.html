@@ -113,9 +113,24 @@
     <script src="{{ url_for('static', filename='main.js') }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            const data = await callGameApi("/api/state");
 
-            handleGameState(data, true);
+			const savedDataString = localStorage.getItem("gameData");
+
+			if (!savedDataString) {
+				console.error("No game state found. Redirecting...");
+				window.location.href = "/";
+				return;
+			}
+
+			const gameData = JSON.parse(savedDataString);
+
+			console.log(gameData.game_state);
+
+			console.log(gameData);
+
+			handleGameState(gameData.game_state, true);
+			triggerEvent("POWERUPS_GAINED", gameData.game_state);
+
         });
     </script>
 </body>
