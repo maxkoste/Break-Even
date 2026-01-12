@@ -18,7 +18,7 @@ Welcome to *Break Even* — a blackjack simulator about pressure, probability, a
 
 ## What This Is
 
-A game hosted on the web built with a JavaScript frontend and a Python backend. The game simulates blackjack with the single objective of returning your balance to zero. You start with $200. You will almost certainly lose. That’s part of the charm.
+A game hosted on the web built with a JavaScript frontend and a Python backend. The game simulates blackjack with the single objective of returning your balance to zero. You start with $250. You will almost certainly lose. That’s part of the charm.
 
 No casinos.  
 No flashy animations.  
@@ -28,7 +28,6 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 - A simple, responsive browser UI written in JavaScript.
 - A Python backend that handles shuffling, dealing, hit/stand logic, and balance updates.
 - A persistent running total of your monstrous debt.
-- Text messages from your wife reminding you what’s at stake.
 - The hollow thrill of chasing losses in retro 8-bit style.
 
 ### Gameplay Loop
@@ -49,7 +48,7 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 - Python  
 - Deck of Cards API
 - Astronomy API
-- Returns hand results, updated balance, and game state  
+- Returns hand results, updated balance, celestial data, powerups, and game state  
 
 
 ### Instructions
@@ -126,18 +125,37 @@ This endpoint:
 ```json
 {
   "Celestial Data": {
-    "Sun": "Leo",
-    "Moon": "Cancer",
-    "Mars": "Aries"
+    Earth: "Pictor",​​
+    Jupiter: "Gemini",​​
+    Mars: "Sagittarius",​​
+    Mercury: "Sagittarius",​​
+    Moon: "Libra",​​
+    Neptune: "Pisces",​​
+    Pluto: "Capricornus",​​
+    Saturn: "Aquarius",​​
+    Sun: "Sagittarius",​​
+    Uranus: "Taurus",​​
+    Venus: "Sagittarius"
   },
   "Deck Data": {
-    "deck_id": "3p40paa87x90",
-    "remaining": 324
+    deck_ready: true
   },
   "Game State": {
-    "chips": 200,
-    "hands": [],
-    "scores": []
+        active_hand_index: 0,​​
+        chips: 200,​​
+        chips_won: 0,​​
+        dealer: Array [ (2) […], (2) […] ],​​
+        dealer_score: 19,​​
+        debt: 10000,​​
+        game_over: false,​​
+        game_started: true,​​
+        player_hands: Array [ (3) […] ],​​
+        player_scores: Array [ 9 ],​​
+        player_sign: "sagittarius",​​
+        powerup_info: Array [],​​
+        powerups: Array(5) [ 1, 2, 3, … ],​​
+        victory: false,​​
+        winner: null
   }
 }
 ```
