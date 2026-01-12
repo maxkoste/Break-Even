@@ -4,7 +4,7 @@ A tiny 8-bit blackjack descent into desperation.
 ## Premise
 
 You’re Mike.  
-You’re a washed-up, pixelated gambler with a talent for bad decisions and exactly $200 left in chips.
+You’re a washed-up, pixelated gambler with a talent for bad decisions and exactly $250 left in chips.
 
 Your phone buzzes.  
 It’s your wife, furious again:  
