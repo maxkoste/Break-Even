@@ -112,7 +112,7 @@ def stand():
     """
     result = logic.stand()
     if result.get("game_over"):
-        logic.next_turn(result.get("winner"))
+        logic.next_turn()
   
     return jsonify(result)
 

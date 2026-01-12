@@ -117,7 +117,7 @@ def perform_hit(rotate_amount=None):
             chips_won = 0
             
         state = game_state(winner, game_over=True, chips_won=chips_won)
-        next_turn(winner if isinstance(result, str) else result["winner"])
+        next_turn()
         return state
     return game_state()
 
@@ -434,7 +434,7 @@ def use_powerup(powerup_index):  # 0-10 Major, 11-21 Minor
         case 2:  # Mercury Major, reset turn
             scores = [0, 0]
             winner = game_over()
-            next_turn(winner)
+            next_turn()
             return game_state(winner, game_over=True)
         case 3:  # Venus Major
             hand = hands[active_hand_index]
