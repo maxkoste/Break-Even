@@ -141,21 +141,21 @@ This endpoint:
     deck_ready: true
   },
   "Game State": {
-        active_hand_index: 0,​​
-        chips: 200,​​
-        chips_won: 0,​​
-        dealer: Array [ (2) […], (2) […] ],​​
-        dealer_score: 19,​​
-        debt: 10000,​​
-        game_over: false,​​
-        game_started: true,​​
-        player_hands: Array [ (3) […] ],​​
-        player_scores: Array [ 9 ],​​
-        player_sign: "sagittarius",​​
-        powerup_info: Array [],​​
-        powerups: Array(5) [ 1, 2, 3, … ],​​
-        victory: false,​​
-        winner: null
+    active_hand_index: 0,​​
+    chips: 200,
+​​    chips_won: 0,​​
+    dealer: Array [ (2) […], (2) […] ],​​
+    dealer_score: 19,​​
+    debt: 10000,​​
+    game_over: false,​​
+    game_started: true,​​
+    player_hands: Array [ (3) […] ],​​
+    player_scores: Array [ 9 ],​​
+    player_sign: "sagittarius",​​
+    powerup_info: Array [],​​
+    powerups: Array(5) [ 1, 2, 3, … ],​​
+    victory: false,​​
+    winner: null
   }
 }
 ```
