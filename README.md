@@ -82,6 +82,7 @@ flask --app src/app run (without automatic reload)
 3. Open your web browser and go to http://localhost:5000/
 
 
+
 # BreakEven - API Documentation
 
 BreakEven is a web-based Blackjack game built as a mashup project.
@@ -118,55 +119,37 @@ This endpoint:
 **Request body**
 ```json
 {
-  "selectedSign": "leo"
+  "selectedSign": "sagittarius"
 }
 ```
-**Response**
+**Response (example)**
 ```json
 {
-  "Celestial Data": {
-    Earth: "Pictor",​​
-    Jupiter: "Gemini",​​
-    Mars: "Sagittarius",​​
-    Mercury: "Sagittarius",​​
-    Moon: "Libra",​​
-    Neptune: "Pisces",​​
-    Pluto: "Capricornus",​​
-    Saturn: "Aquarius",​​
-    Sun: "Sagittarius",​​
-    Uranus: "Taurus",​​
-    Venus: "Sagittarius"
+  "celestial_data": {
+    "Sun": "Sagittarius",
+    "Moon": "Libra",
+    "Mars": "Sagittarius"
   },
-  "Deck Data": {
-    deck_ready: true
-  },
-  "Game State": {
-    active_hand_index: 0,​​
-    chips: 200,
-​​    chips_won: 0,​​
-    dealer: Array [ (2) […], (2) […] ],​​
-    dealer_score: 19,​​
-    debt: 10000,​​
-    game_over: false,​​
-    game_started: true,​​
-    player_hands: Array [ (3) […] ],​​
-    player_scores: Array [ 9 ],​​
-    player_sign: "sagittarius",​​
-    powerup_info: Array [],​​
-    powerups: Array(5) [ 1, 2, 3, … ],​​
-    victory: false,​​
-    winner: null
+  "deck_ready": true,
+  "game_state": {
+    "chips": 200,
+    "player_sign": "sagittarius",
+    "player_hands": [],
+    "dealer": [],
+    "game_started": true,
+    "game_over": false
   }
 }
+
 ```
 ### POST /api/deal
 
-Starts a new round of Blackjack
+Starts a new round of Blackjack.
 
+This endpoint:
 - Places the player’s bet
-- Creates a new multi-deck Blackjack deck
-- Draws all cards needed for the round
-- Deals the initial hands
+- Deals the initial cards
+- Updates the game state
 
 **Request body**
 ```json
@@ -174,40 +157,50 @@ Starts a new round of Blackjack
   "bet": 50
 }
 ```
-**Response**
+**Response (example)**
 ```json
 {
+  "active_hand_index": 0,
   "chips": 150,
-  "hands": [
-    [["KING", "HEARTS"], ["7", "CLUBS"]],
-    [["9", "SPADES"], ["HIDDEN", "CARD"]]
+  "dealer": [
+    ["6", "SPADES"],
+    ["10", "HEARTS"]
   ],
-  "scores": [17, 9],
-  "currentTurn": "player"
+  "player_hands": [
+    [
+      [50, "BET"],
+      ["7", "DIAMONDS"],
+      ["4", "SPADES"]
+    ]
+  ],
+  "player_scores": [11],
+  "game_over": false,
+  "winner": null
 }
 ```
 **Error Response**
 
-- 400 Bad Request – Invalid or missing bet value
+- 400 Bad Request – Invalid bet value or deck not initialized
 
 ## GET /api/hit
 
-Draws one card for the player
+Draws one card for the player. If the player busts, the round ends automatically and the game state
+is updated.
 
-If the player busts:
-- The round ends immediately
-- The winner is determined
-- The game state is updated
-
-**Response**
+**Response (example)**
 ```json
 {
-  "hands": [
-    [["KING", "HEARTS"], ["7", "CLUBS"], ["5", "DIAMONDS"]]
+  "player_hands": [
+    [
+      [50, "BET"],
+      ["2", "CLUBS"],
+      ["JOKER", "RED"],
+      ["KING", "SPADES"]
+    ]
   ],
-  "scores": [22],
-  "gameOver": true,
-  "winner": "dealer"
+  "player_scores": [12],
+  "game_over": false,
+  "winner": null
 }
 ```
 ## GET /api/stand
@@ -219,18 +212,46 @@ This endpoint:
 - Determines the winner
 - Updates chips and game state
 
-**Response**
+**Response (example)**
 ```json
 {
-  "hands": [
-    [["10", "HEARTS"], ["8", "SPADES"]],
-    [["9", "DIAMONDS"], ["7", "CLUBS"], ["5", "HEARTS"]]
+  "dealer": [
+    ["6", "SPADES"],
+    ["10", "HEARTS"],
+    ["10", "CLUBS"]
   ],
-  "scores": [18, 21],
-  "winner": "dealer",
-  "gameOver": true
+  "dealer_score": 26,
+  "player_scores": [21],
+  "chips": 250,
+  "game_over": true,
+  "winner": "Player wins! Dealer busted"
 }
 ```
+
+## POST /api/split
+
+Splits the player’s current hand into two separate hands.
+
+This endpoint can only be used when:
+- The player has exactly two cards
+- Both cards have the same value
+- The player has enough chips to place an additional bet
+
+**Response**
+Returns the updated game state if the split was successful.
+```json
+{
+  "game_state": { "...": "..." }
+}
+```
+
+**Error Response**
+```
+{
+  "error": "Split not allowed for this hand"
+}
+```
+
 ## POST /api/use_powerup
 
 Applies a power-up to the current game state.
@@ -244,87 +265,19 @@ Power-ups are unlocked based on celestial data and the player’s zodiac sign.
 }
 ```
 **Response**
+Returns the updated game state after the power-up has been applied.
 ```json
 {
-  "hands": [...],
-  "scores": [...],
-  "powerups": [...],
-  "powerupInfo": {
-    "Planet": "Mars",
-    "Player Sign": "aries"
-  }
-}
-```
-## GET /api/state
-
-Returns the current game state.
-
-This endpoint exists mainly for debugging and development purposes.
-
-**Response**
-```json
-{
-  "chips": 120,
-  "hands": [...],
-  "scores": [...],
-  "currentTurn": "player"
-}
-```
-## POST /api/split
-
-Splits the player’s current hand into two separate hands.
-
-This endpoint can only be used when:
-- The player has exactly two cards
-- Both cards have the same value
-- The player has enough chips to place an additional bet
-
-If the split is successful, the game continues with two active player hands.
-
-**Response**
-
-Returns the updated game state with the split hands.
-
-```json
-{
-  "player": [
-    [["8", "HEARTS"], ["5", "CLUBS"]],
-    [["8", "SPADES"], ["KING", "DIAMONDS"]]
-  ],
-  "dealer": [["QUEEN", "HEARTS"], ["HIDDEN", "CARD"]],
-  "player_score": [13, 18],
-  "dealer_score": 10,
-  "chips": 100,
-  "game_started": true,
-  "game_over": false
-}
-```
-**Error Response**
-```
-{
-  "error": "Split not allowed for this hand"
-}
-```
-## POST /api/draw_card_by_index
-
-Draws a specific card from the deck by selecting its index.
-
-This endpoint allows the player to influence which card is drawn next by
-rotating the deck before performing a normal hit action.
-
-It is primarily used by certain power-ups that allow card preview or selection.
-
-**Request Body**
-```json
-{
-  "index": 1
+  "game_state": { "...": "..." }
 }
 ```
 
 ## POST /api/draw_card_by_index
 
-Rotates the deck to a given index and draws a card for the player.
-This can be used to simulate choosing a specific card from the deck.
+Draws a card from the deck at a specified index. 
+The deck is rotated to the given index before drawing the card.
+This endpoint is primarily used by power-ups that allow card preview
+or manipulation.
 
 **Request body**
 ```json
@@ -333,17 +286,10 @@ This can be used to simulate choosing a specific card from the deck.
 }
 ```
 **Response**
+Returns the updated game state after the draw.
 ```json
 {
-  "player": [["KING", "HEARTS"], ["7", "CLUBS"], ["5", "DIAMONDS"]],
-  "dealer": [["9", "SPADES"], ["HIDDEN", "CARD"]],
-  "player_score": 22,
-  "dealer_score": 9,
-  "game_over": true,
-  "winner": "dealer",
-  "chips": 150,
-  "powerups": [],
-  "powerup_info": {}
+  "game_state": { "...": "..." }
 }
 ```
 
