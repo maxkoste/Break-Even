@@ -70,7 +70,6 @@ def start_game():
 
     return game_state()
 
-
 def draw_card(hand_index):
     """
     Draws a card from the deck and adds it to the specified hand.
@@ -95,41 +94,6 @@ def draw_card(hand_index):
         powerups.append(random.choice(range(0, 11)))
     recalculate_score(hand_index)
     return scores[hand_index] > 21
-
-def recalculate_score(hand_index):
-    """
-    Recalculates the total score for a hand according to Blackjack rules.
-
-    Handles ace values (11 or 1) and ignores non-card entries such as bets.
-
-    Args:
-        hand_index (int): Index of the hans (0 = dealer, 1 = player).
-    """
-    global saturn_active
-    raw_score = 0
-    aces = 0
-    for card in hands[hand_index]:
-        # Skip bets
-        if isinstance(card, tuple) and card[1] == "BET":
-            continue
-        value, suit = card
-        if value == "ACE":
-            raw_score += 11
-            aces += 1
-        elif value in VALUE_MAP:
-            raw_score += VALUE_MAP[value]
-        elif value != "JOKER":
-            raw_score += int(value)
-    while raw_score > 21 and aces > 0:
-        raw_score -= 10
-        aces -= 1
-    score = raw_score - hand_adjustments[hand_index]
-    scores[hand_index] = score
-    if scores[hand_index] > 21 and saturn_active and hand_index != 0:
-        additional = ((scores[hand_index] - 1) // 21) * 21
-        hand_adjustments[hand_index] += additional
-        scores[hand_index] -= additional
-        saturn_active = False
 
 def perform_hit(rotate_amount=None):
     global active_hand_index
@@ -156,61 +120,6 @@ def perform_hit(rotate_amount=None):
         next_turn(winner if isinstance(result, str) else result["winner"])
         return state
     return game_state()
-
-def set_celestial_data(data):
-    """
-    Processes celestial data and assigns power-ups based on the player's zodiac sign.
-
-    Args:
-        data (dict): Mapping of celestial bodies to constellation names.
-    """
-    global celestial_data
-    celestial_data = data
-
-    celestial_data = {
-        body: sign.strip().lower()
-        for body, sign in data.items()
-        if isinstance(sign, str)
-    }
-
-    matched = False
-
-    for body, sign in celestial_data.items():
-        if sign == player_sign and body in BODY_POWERUPS:
-            powerup_id = BODY_POWERUPS.get(body)
-            print(f"Match found: body={body}, sign={sign}, powerup={powerup_id}")
-            assign_powerups(BODY_POWERUPS[body])
-            matched = True
-
-    if not matched:
-        print(f"No power up match found for player sign: {player_sign}")
-
-
-def set_player_sign(sign):
-    """
-    Stores the player's selected zodiac sign.
-
-    Args:
-        sign (dict): JSON data containing the selected zodiac sign.
-    """
-    global player_sign
-    selected_sign = sign["selectedSign"].strip().lower()
-    player_sign = selected_sign
-
-def get_score(card_value):
-    """
-    Returns the Blackjack point value of a card.
-
-    Args:
-        card_value (str): The value of the card (e.g. "ACE", "KING", "7").
-
-    Returns:
-        int: The numerical score associated with the card.
-    """
-    if card_value in VALUE_MAP:
-        return VALUE_MAP[card_value]
-    return int(card_value)
-
 
 def bet(amount, hand_index=1):
     """
@@ -244,24 +153,6 @@ def bet(amount, hand_index=1):
         return "GAME_OVER"
 
     return f"Bet of {amount} placed on hand {hand_index}."
-
-def reset_game():
-    """
-    Resets the game state to its initial values.
-
-    Restores chips, clears hands and scores, resets powerups,
-    and marks the game as not started
-    """
-    global chips, hands, scores, hand_adjustments, game_started, powerups, powerup_info, active_hand_index, debt
-    chips = 250
-    debt = 10000
-    hands = [[], []]
-    scores = [0, 0]
-    hand_adjustments = [0, 0]
-    powerups = []
-    powerup_info = []
-    game_started = False
-    active_hand_index = 1
 
 def split(allow_any_split=False):
     """
@@ -370,7 +261,6 @@ def double_down(bet_amount, hand_index=0):
 def insurance():  # Place an insurance if dealers first card is an Ace
     pass
 
-
 def dealer_turn():
     """
     Plays the dealer's turn automatically according to Blackjack rules.
@@ -379,7 +269,6 @@ def dealer_turn():
     """
     while scores[0] < 17:
         draw_card(0)
-
 
 def game_over():
     """
@@ -456,6 +345,34 @@ def game_over():
     
     return {"winner": winner, "chips_won": chips_won}  
 
+def reset_game():
+    """
+    Resets the game state to its initial values.
+
+    Restores chips, clears hands and scores, resets powerups,
+    and marks the game as not started
+    """
+    global chips, hands, scores, hand_adjustments, game_started, powerups, powerup_info, active_hand_index, debt
+    chips = 250
+    debt = 10000
+    hands = [[], []]
+    scores = [0, 0]
+    hand_adjustments = [0, 0]
+    powerups = []
+    powerup_info = []
+    game_started = False
+    active_hand_index = 1
+
+def next_turn():  
+    """
+    Prepares for the next round by resetting hands and scores.
+    """
+    global hands, scores, hand_adjustments, active_hand_index
+
+    hands = [[], []]
+    scores = [0, 0]
+    hand_adjustments = [0, 0]
+    active_hand_index = 1
 
 def game_state(winner=None, game_over=False, chips_won=0):
     """
@@ -489,45 +406,6 @@ def game_state(winner=None, game_over=False, chips_won=0):
         "winner": winner,
         "victory": chips >= 10000
     }
-
-
-def next_turn(winner):  
-    """
-    Prepares for the next round by resetting hands and scores.
-
-    Args:
-        winner (str): The winner of the previous round (unused in this function.)
-    """
-    global hands, scores, hand_adjustments, active_hand_index
-
-    hands = [[], []]
-    scores = [0, 0]
-    hand_adjustments = [0, 0]
-    active_hand_index = 1
-
-
-def assign_powerups(powerup_id):  # Read celestial data and assign correct powerups
-    """
-    Assigns a power-up to the player by adding it to the powerups list.
-
-    Args:
-        powerup_id (int): The ID of the power-up to assign.
-    """
-    print("assigning powerup", powerup_id)
-    powerups.append(powerup_id)
-
-
-def rotate_deck(index):
-    """
-    Rotates deck to a specific position.
-
-    Rotates the deck so that the card at the specified index is drawn next.
-
-    Args:
-        index (int): The position in the deck.
-    """
-    deck.rotate(-index)
-
 
 def use_powerup(powerup_index):  # 0-10 Major, 11-21 Minor
     """
@@ -646,3 +524,113 @@ def use_powerup(powerup_index):  # 0-10 Major, 11-21 Minor
             print("Incorrect power-up value")
             return {"error": "Invalid powerup"}
     return game_state() 
+
+def assign_powerups(powerup_id):  # Read celestial data and assign correct powerups
+    """
+    Assigns a power-up to the player by adding it to the powerups list.
+
+    Args:
+        powerup_id (int): The ID of the power-up to assign.
+    """
+    print("assigning powerup", powerup_id)
+    powerups.append(powerup_id)
+
+def rotate_deck(index):
+    """
+    Rotates deck to a specific position.
+
+    Rotates the deck so that the card at the specified index is drawn next.
+
+    Args:
+        index (int): The position in the deck.
+    """
+    deck.rotate(-index)
+
+def recalculate_score(hand_index):
+    """
+    Recalculates the total score for a hand according to Blackjack rules.
+
+    Handles ace values (11 or 1) and ignores non-card entries such as bets.
+
+    Args:
+        hand_index (int): Index of the hans (0 = dealer, 1 = player).
+    """
+    global saturn_active
+    raw_score = 0
+    aces = 0
+    for card in hands[hand_index]:
+        # Skip bets
+        if isinstance(card, tuple) and card[1] == "BET":
+            continue
+        value, suit = card
+        if value == "ACE":
+            raw_score += 11
+            aces += 1
+        elif value in VALUE_MAP:
+            raw_score += VALUE_MAP[value]
+        elif value != "JOKER":
+            raw_score += int(value)
+    while raw_score > 21 and aces > 0:
+        raw_score -= 10
+        aces -= 1
+    score = raw_score - hand_adjustments[hand_index]
+    scores[hand_index] = score
+    if scores[hand_index] > 21 and saturn_active and hand_index != 0:
+        additional = ((scores[hand_index] - 1) // 21) * 21
+        hand_adjustments[hand_index] += additional
+        scores[hand_index] -= additional
+        saturn_active = False
+
+def get_score(card_value):
+    """
+    Returns the Blackjack point value of a card.
+
+    Args:
+        card_value (str): The value of the card (e.g. "ACE", "KING", "7").
+
+    Returns:
+        int: The numerical score associated with the card.
+    """
+    if card_value in VALUE_MAP:
+        return VALUE_MAP[card_value]
+    return int(card_value)
+
+def set_celestial_data(data):
+    """
+    Processes celestial data and assigns power-ups based on the player's zodiac sign.
+
+    Args:
+        data (dict): Mapping of celestial bodies to constellation names.
+    """
+    global celestial_data
+    celestial_data = data
+
+    celestial_data = {
+        body: sign.strip().lower()
+        for body, sign in data.items()
+        if isinstance(sign, str)
+    }
+
+    matched = False
+
+    for body, sign in celestial_data.items():
+        if sign == player_sign and body in BODY_POWERUPS:
+            powerup_id = BODY_POWERUPS.get(body)
+            print(f"Match found: body={body}, sign={sign}, powerup={powerup_id}")
+            assign_powerups(BODY_POWERUPS[body])
+            matched = True
+
+    if not matched:
+        print(f"No power up match found for player sign: {player_sign}")
+
+
+def set_player_sign(sign):
+    """
+    Stores the player's selected zodiac sign.
+
+    Args:
+        sign (dict): JSON data containing the selected zodiac sign.
+    """
+    global player_sign
+    selected_sign = sign["selectedSign"].strip().lower()
+    player_sign = selected_sign

@@ -4,45 +4,198 @@ let dealerFirstCardRevealed = false;
 let lastJokerCount = 0;
 let shownEvents = new Set();
 
-/**
- * Requests the user's current geographic location.
- */
-function getLocation() {
-    if (!navigator.geolocation) {
-        x.textContent = "Geolocation is not supported by this browser.";
-        return;
+const SUITS = ['HEARTS', 'CLUBS', 'DIAMONDS', 'SPADES'];
+const VALUES = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const IMAGES = {
+    JOKER: { JOKER: "static/assets/Joker.png" },
+    BACKGROUND: { BACKGROUND: "static/assets/Background.png" },
+    POWERUP: {
+        0: "static/assets/Sun.png",
+        1: "static/assets/Moon.png",
+        2: "static/assets/Mercury.png",
+        3: "static/assets/Venus.png",
+        4: "static/assets/Earth.png",
+        5: "static/assets/Mars.png",
+        6: "static/assets/Jupiter.png",
+        7: "static/assets/Saturn.png",
+        8: "static/assets/Uranus.png",
+        9: "static/assets/Neptune.png",
+        10: "static/assets/Pluto.png"
     }
-    return navigator.geolocation.getCurrentPosition(success, handleError);
+};
+
+SUITS.forEach(suit => {
+    IMAGES[suit] = {};
+    VALUES.forEach(val => {
+        const code = val === 'J' ? 'J' : val === 'Q' ? 'Q' : val === 'K' ? 'K' : val === '10' ? 'T' : val === 'ACE' ? 'A' : val;
+        IMAGES[suit][val] = `static/assets/${code}${suit[0]}.png`;
+    });
+});
+
+const POWERUP_TEXT = {
+    0: "Illuminate!",
+    1: "Light side, or dark?",
+    2: "Back to the start <-",
+    3: "The dealer is charmed~",
+    4: "Fissure!",
+    5: "Obliterate!!!",
+    6: "Extend your grasp!",
+    7: "Loop around ->",
+    8: "No, you.",
+    9: "Reach for the stars *",
+    10: "Another chance?"
+};
+
+const EVENTS = {
+    POWERUPS_GAINED: eventPowerupsGained,
+};
+
+async function initGameState() {
+    const select = document.getElementById("sign");
+    const selectedSign = select.value;
+
+    const gameData = await callGameApi("/api/init-game-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedSign })
+    });
+
+    localStorage.setItem("gameData", JSON.stringify(gameData));
+
+	console.log("printing Game data from initGameFunction " + gameData);
+
+    window.location.href = "/game";
 }
 
-/**
- * Handles a successful geolocation request.
- */
-function success(position) {
-    const { latitude, longitude, altitude } = position.coords;
-    x.innerHTML =
-        `Latitude: ${latitude}<br>` +
-        `Longitude: ${longitude}<br>` +
-        `Altitude: ${altitude ?? "Not available"}`;
+async function startGame() {
+    dealerFirstCardRevealed = false;
+    let bet = 0;
+    try {
+        bet = parseInt(document.getElementById("betSelect").value, 10);
+    } catch (error) {
+        console.log("Value is null - setting bet to 50 for first round");
+        bet = 50;
+    }
+
+    if (!bet || bet <= 0) {
+        console.log("No valid bet selected, setting it to 50");
+        bet = 50;
+    }
+
+    const data = await callGameApi("/api/deal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bet })
+    });
+
+    handleGameState(data, false);
 }
 
-/**
- * Handles errors from the geolocation API.
- */
-function handleError(err) {
-    switch (err.code) {
-        case err.PERMISSION_DENIED:
-            x.textContent = "User denied the request for Geolocation.";
+async function hit() {
+    const data = await callGameApi("/api/hit");
+    handleGameState(data);
+}
+
+async function stand() {
+    const data = await callGameApi("/api/stand");
+    handleGameState(data);
+}
+
+async function split() {
+    const data = await callGameApi("/api/split", { method: "POST" });
+    if (data.error) {
+        alert(data.error);
+    } else {
+        handleGameState(data);
+    }
+}
+
+async function usePowerUp(num) {
+    const data = await callGameApi("/api/use_powerup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ num })
+    });
+
+    switch (num) {
+        case 0:
+            powerup0(data);
             break;
-        case err.POSITION_UNAVAILABLE:
-            x.textContent = "Location information is unavailable.";
-            break;
-        case err.TIMEOUT:
-            x.textContent = "The request to get user location timed out.";
+        case 1:
+            powerup1(data);
             break;
         default:
-            x.textContent = "An unknown error occurred.";
+            console.log("Powerup handled in backend: " + num);
     }
+    handleGameState(data);
+}
+
+async function draw_card_by_index(index) {
+    hideEventOverlay();
+    const data = await callGameApi("/api/draw_card_by_index", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index })
+    });
+    handleGameState(data);
+}
+
+function handleRoundState(data) {
+    if (!data.game_started) return;
+
+    if (data.game_over) {
+        // VICTORY
+        if (data.victory) {
+            window.location.href = "/victory";
+            return;
+        }
+
+        // GAME OVER
+        if (data.chips <= 0) {
+            window.location.href = "/game-over";
+            return;
+        }
+
+        endRoundUI(data); 
+        return;
+    }
+
+    inRoundUI();
+}
+
+function handleGameState(data, resetDropdown = true) {
+    triggerAnimations(data);
+    triggerEvent("POWERUPS_GAINED", data);
+    populateModalButtonsFromArray(data.powerups);
+    dealerCards(data);
+    playerHands(data);
+    bets(data, resetDropdown);
+    handleRoundState(data);
+}
+
+function renderCards(containerId, cards, hideFirst = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+
+    cards
+        .filter(([value, suit]) => suit !== "BET" && value !== "JOKER")
+        .forEach(([value, suit], index) => {
+            const img = document.createElement("img");
+            img.className = "card";
+            img.loading = "eager";
+
+            if (hideFirst && index === 0 && !dealerFirstCardRevealed) {
+                img.src = IMAGES.BACKGROUND.BACKGROUND;
+                img.alt = "Face-down card";
+                container.appendChild(img);
+                return;
+            }
+
+            img.src = getCardImageSrc(value, suit);
+            img.alt = `${value} of ${suit}`;
+            container.appendChild(img);
+        });
 }
 
 /**
@@ -60,61 +213,174 @@ function updateBankUI(chips, bet, debt) {
     }
 }
 
-/**
- * Extracts the bet amount from the player's hand.
- */
-function extractBet(hands) {
-    if (!Array.isArray(hands) || hands.length === 0) {
-        return 0;
-    }
-    return hands.reduce((sum, hand) => {
-        const betEntry = hand.find(([, suit]) => suit === "BET");
-        return sum + (betEntry ? betEntry[0] : 0);
-    }, 0);
-}
+function bets(data, resetDropdown) {
+    const chips = data.chips;
+    const handsToCheck = data.player_hands || (data.player ? [data.player] : []);
+    const debt = data.debt;
+    const bet = extractBet(handsToCheck);
 
-/**
- * Populates the bet dropdown based on available chips.
- */
-function populateBetDropdown(chips, selectedBet = null) {
-    const select = document.getElementById("betSelect");
-    select.innerHTML = "";
-
-    if (chips < betStep) {
-        select.disabled = true;
-        return;
-    }
-    select.disabled = false;
-
-    for (let bet = betStep; bet <= chips; bet += betStep) {
-        const option = document.createElement("option");
-        option.value = bet;
-        option.textContent = bet;
-        select.appendChild(option);
+    if (resetDropdown) {
+        populateBetDropdown(chips, bet);
     }
 
-    if (selectedBet !== null && select.querySelector(`option[value="${selectedBet}"]`)) {
-        select.value = selectedBet;
-    } else if (select.options.length > 0) {
-        select.value = select.options[0].value;
+    updateBankUI(chips, bet, debt);
+}
+
+function inRoundUI() {
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("controls").style.display = "block";
+    document.getElementById("betting").style.display = "none";
+}
+
+function endRoundUI(data) {
+    document.getElementById("controls").style.display = "none";
+    const startBtn = document.getElementById("startBtn");
+    startBtn.style.display = "block";
+    startBtn.textContent = "New Round";
+    startBtn.onclick = startGame;
+    document.getElementById("betting").style.display = "block";
+    
+    const chipsWon = data.chips_won || 0;
+    
+    console.log(`Chips won from backend: ${chipsWon}`);
+    
+    showWinLossPopup(data.winner, chipsWon);
+}
+
+function triggerAnimations(data) {
+    const handsToCheck = data.player_hands || (data.player ? [data.player] : []);
+    const jokerCount = handsToCheck.reduce((count, hand) =>
+        count + hand.filter(([value]) => value === "JOKER").length, 0);
+
+    if (jokerCount > lastJokerCount) {
+        showPopup(IMAGES.JOKER.JOKER);
     }
+    lastJokerCount = jokerCount;
 }
 
-/**
- * Calls a backend API endpoint and returns the JSON response.
- */
-async function callGameApi(url, options = {}) {
-    const response = await fetch(url, options);
-    return await response.json();
+function triggerEvent(type, data) {
+    if (shownEvents.has(type)) return;
+    shownEvents.add(type);
+    EVENTS[type]?.(data);
 }
 
-function debug(data) {
-    //const el = document.getElementById("output");
-    //if (el) el.textContent = JSON.stringify(data, null, 2);
+function showEventOverlay() {
+    document.getElementById("displayOverlay").classList.remove("hidden");
+    document.body.classList.add("modal-open");
 }
 
-function powerupsModal(powerups) {
-    populateModalButtonsFromArray(powerups);
+function hideEventOverlay() {
+    document.getElementById("displayOverlay").classList.add("hidden");
+    document.body.classList.remove("modal-open");
+}
+
+function setEventContent(node) {
+    const content = document.getElementById("displayContent");
+    content.innerHTML = "";
+    content.appendChild(node);
+}
+
+function showPopup(imageSrc, text = null) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "popup";
+
+    const img = document.createElement("img");
+    img.src = imageSrc;
+    wrapper.appendChild(img);
+
+    if (text) {
+        const textWrapper = document.createElement("div");
+        textWrapper.className = "popup-text-wrapper";
+
+        const label = document.createElement("div");
+        label.className = "popup-text";
+        label.textContent = text;
+
+        textWrapper.appendChild(label);
+        wrapper.appendChild(textWrapper);
+    }
+
+    document.body.appendChild(wrapper);
+
+    requestAnimationFrame(() => {
+        wrapper.classList.add("show");
+    });
+
+    setTimeout(() => {
+        wrapper.classList.remove("show");
+        wrapper.addEventListener("transitionend", () => wrapper.remove(), { once: true });
+    }, 1400);
+}
+
+function eventPowerupsGained(data) {
+    showEventOverlay();
+    const wrapper = document.createElement("div");
+    wrapper.className = "event-box";
+
+    const title = document.createElement("h3");
+    const name = data.player_sign;
+	title.textContent = "Celestial Guidance | " + name[0].toUpperCase() + name.slice(1) + " |";
+    wrapper.appendChild(title);
+
+    const description = document.createElement("p");
+    description.textContent = "The stars align over Vegas, the heavens themselves at your beck and call:";
+    wrapper.appendChild(description);
+
+    const grid = document.createElement("div");
+    grid.className = "event-powerup-grid";
+
+    data.powerups.forEach(id => {
+        grid.appendChild(createPowerupItem(id));
+    });
+
+    wrapper.appendChild(grid);
+    const continueBtn = document.createElement("button");
+    continueBtn.className = "game-button mt-3";
+    continueBtn.textContent = "Continue";
+    continueBtn.onclick = hideEventOverlay;
+
+    wrapper.appendChild(continueBtn);
+    setEventContent(wrapper);
+}
+
+function showWinLossPopup(winner, chipsChange) {
+    const popup = document.createElement("div");
+    popup.className = "winloss-popup";
+    
+    if (chipsChange > 0) {
+        popup.classList.add("win");
+    } else if (chipsChange < 0) {
+        popup.classList.add("loss");
+    } else {
+        popup.classList.add("tie");
+    }
+    
+    const winnerText = document.createElement("div");
+    winnerText.className = "winloss-winner";
+    winnerText.textContent = winner || "Round over";
+    
+    const chipsText = document.createElement("div");
+    chipsText.className = "winloss-chips";
+    if (chipsChange > 0) {
+        chipsText.textContent = `+${chipsChange} chips`;
+    } else if (chipsChange < 0) {
+        chipsText.textContent = `${chipsChange} chips`;
+    } else {
+        chipsText.textContent = "±0 chips";
+    }
+    
+    popup.appendChild(winnerText);
+    popup.appendChild(chipsText);
+    document.body.appendChild(popup);
+    
+    requestAnimationFrame(() => {
+        popup.classList.add("show");
+    });
+    
+    setTimeout(() => {
+        popup.classList.remove("show");
+        popup.addEventListener("transitionend", () => popup.remove(), { once: true });
+    }, 1500);
 }
 
 function dealerCards(data) {
@@ -172,254 +438,6 @@ function playerHands(data) {
     });
 }
 
-function bets(data, resetDropdown) {
-    const chips = data.chips;
-    const handsToCheck = data.player_hands || (data.player ? [data.player] : []);
-    const debt = data.debt;
-    const bet = extractBet(handsToCheck);
-
-    if (resetDropdown) {
-        populateBetDropdown(chips, bet);
-    }
-
-    updateBankUI(chips, bet, debt);
-}
-
-function handleRoundState(data) {
-    if (!data.game_started) return;
-
-    if (data.game_over) {
-        // VICTORY
-        if (data.victory) {
-            window.location.href = "/victory";
-            return;
-        }
-
-        // GAME OVER
-        if (data.chips <= 0) {
-            window.location.href = "/game-over";
-            return;
-        }
-
-        endRoundUI(data); 
-        return;
-    }
-
-    inRoundUI();
-}
-
-
-function handleGameState(data, resetDropdown = true) {
-    debug(data);
-    triggerAnimations(data);
-    triggerEvent("POWERUPS_GAINED", data);
-    powerupsModal(data.powerups);
-    dealerCards(data);
-    playerHands(data);
-    bets(data, resetDropdown);
-    handleRoundState(data);
-}
-
-function inRoundUI() {
-    document.getElementById("startBtn").style.display = "none";
-    document.getElementById("controls").style.display = "block";
-    document.getElementById("betting").style.display = "none";
-}
-
-function endRoundUI(data) {
-    document.getElementById("controls").style.display = "none";
-    const startBtn = document.getElementById("startBtn");
-    startBtn.style.display = "block";
-    startBtn.textContent = "New Round";
-    startBtn.onclick = startGame;
-    document.getElementById("betting").style.display = "block";
-    
-    const chipsWon = data.chips_won || 0;
-    
-    console.log(`Chips won from backend: ${chipsWon}`);
-    
-    showWinLossPopup(data.winner, chipsWon);
-}
-
-async function startGame() {
-    dealerFirstCardRevealed = false;
-    let bet = 0;
-    try {
-        bet = parseInt(document.getElementById("betSelect").value, 10);
-    } catch (error) {
-        console.log("Value is null - setting bet to 50 for first round");
-        bet = 50;
-    }
-
-    if (!bet || bet <= 0) {
-        console.log("No valid bet selected, setting it to 50");
-        bet = 50;
-    }
-
-    const data = await callGameApi("/api/deal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bet })
-    });
-
-    handleGameState(data, false);
-}
-
-async function initGameState() {
-    const select = document.getElementById("sign");
-    const selectedSign = select.value;
-
-    const gameData = await callGameApi("/api/init-game-state", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ selectedSign })
-    });
-
-    localStorage.setItem("gameData", JSON.stringify(gameData));
-
-	console.log("printing Game data from initGameFunction " + gameData);
-
-    window.location.href = "/game";
-}
-
-async function hit() {
-    const data = await callGameApi("/api/hit");
-    handleGameState(data);
-}
-
-async function stand() {
-    const data = await callGameApi("/api/stand");
-    handleGameState(data);
-}
-
-async function split() {
-    const data = await callGameApi("/api/split", { method: "POST" });
-    if (data.error) {
-        alert(data.error);
-    } else {
-        handleGameState(data);
-    }
-}
-
-function populateModalButtonsFromArray(numbers) {
-    const container = document.getElementById("modalButtons");
-    container.innerHTML = "";
-    const uniqueNumbers = [...new Set(numbers)];
-
-    uniqueNumbers.forEach(num => {
-        const btn = document.createElement("button");
-        btn.className = "game-button m-1";
-        btn.type = "button";
-        const item = createPowerupItem(num);
-        btn.appendChild(item);
-        btn.onclick = () => {
-            const modalEl = document.getElementById("powerupModal");
-            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-            modal.hide();
-            usePowerUp(num);
-            showPopup(IMAGES.POWERUP[num], POWERUP_TEXT[num]);
-        };
-        container.appendChild(btn);
-    });
-}
-
-async function usePowerUp(num) {
-    const data = await callGameApi("/api/use_powerup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ num })
-    });
-
-    switch (num) {
-        case 0:
-            powerup0(data);
-            break;
-        case 1:
-            powerup1(data);
-            break;
-        default:
-            console.log("Powerup handled in backend: " + num);
-    }
-    handleGameState(data);
-}
-
-const SUITS = ['HEARTS', 'CLUBS', 'DIAMONDS', 'SPADES'];
-const VALUES = ['ACE', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-const IMAGES = {
-    JOKER: { JOKER: "static/assets/Joker.png" },
-    BACKGROUND: { BACKGROUND: "static/assets/Background.png" },
-    POWERUP: {
-        0: "static/assets/Sun.png",
-        1: "static/assets/Moon.png",
-        2: "static/assets/Mercury.png",
-        3: "static/assets/Venus.png",
-        4: "static/assets/Earth.png",
-        5: "static/assets/Mars.png",
-        6: "static/assets/Jupiter.png",
-        7: "static/assets/Saturn.png",
-        8: "static/assets/Uranus.png",
-        9: "static/assets/Neptune.png",
-        10: "static/assets/Pluto.png"
-    }
-};
-
-SUITS.forEach(suit => {
-    IMAGES[suit] = {};
-    VALUES.forEach(val => {
-        const code = val === 'J' ? 'J' : val === 'Q' ? 'Q' : val === 'K' ? 'K' : val === '10' ? 'T' : val === 'ACE' ? 'A' : val;
-        IMAGES[suit][val] = `static/assets/${code}${suit[0]}.png`;
-    });
-});
-
-const POWERUP_TEXT = {
-    0: "Illuminate!",
-    1: "Light side, or dark?",
-    2: "Back to the start <-",
-    3: "The dealer is charmed~",
-    4: "Fissure!",
-    5: "Obliterate!!!",
-    6: "Extend your grasp!",
-    7: "Loop around ->",
-    8: "No, you.",
-    9: "Reach for the stars *",
-    10: "Another chance?"
-};
-
-function getCardImageSrc(value, suit) {
-    if (suit === "BLACK" || suit === "RED") suit = "JOKER";
-    if (value === "JACK") value = "J";
-    else if (value === "QUEEN") value = "Q";
-    else if (value === "KING") value = "K";
-    else value = value.toString();
-
-    return IMAGES[suit][value];
-}
-
-function renderCards(containerId, cards, hideFirst = false) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = "";
-
-    cards
-        .filter(([value, suit]) => suit !== "BET" && value !== "JOKER")
-        .forEach(([value, suit], index) => {
-            const img = document.createElement("img");
-            img.className = "card";
-            img.loading = "eager";
-
-            if (hideFirst && index === 0 && !dealerFirstCardRevealed) {
-                img.src = IMAGES.BACKGROUND.BACKGROUND;
-                img.alt = "Face-down card";
-                container.appendChild(img);
-                return;
-            }
-
-            img.src = getCardImageSrc(value, suit);
-            img.alt = `${value} of ${suit}`;
-            container.appendChild(img);
-        });
-}
-
 function powerup0(data) {
     const [value, suit] = data.powerup_info;
     const dealerCardsContainer = document.getElementById("dealerCards");
@@ -459,14 +477,77 @@ function powerup1(data) {
     setEventContent(wrapper);
 }
 
-async function draw_card_by_index(index) {
-    hideEventOverlay();
-    const data = await callGameApi("/api/draw_card_by_index", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ index })
+/**
+ * Populates the bet dropdown based on available chips.
+ */
+function populateBetDropdown(chips, selectedBet = null) {
+    const select = document.getElementById("betSelect");
+    select.innerHTML = "";
+
+    if (chips < betStep) {
+        select.disabled = true;
+        return;
+    }
+    select.disabled = false;
+
+    for (let bet = betStep; bet <= chips; bet += betStep) {
+        const option = document.createElement("option");
+        option.value = bet;
+        option.textContent = bet;
+        select.appendChild(option);
+    }
+
+    if (selectedBet !== null && select.querySelector(`option[value="${selectedBet}"]`)) {
+        select.value = selectedBet;
+    } else if (select.options.length > 0) {
+        select.value = select.options[0].value;
+    }
+}
+
+function populateModalButtonsFromArray(numbers) {
+    const container = document.getElementById("modalButtons");
+    container.innerHTML = "";
+    const uniqueNumbers = [...new Set(numbers)];
+
+    uniqueNumbers.forEach(num => {
+        const btn = document.createElement("button");
+        btn.className = "game-button m-1";
+        btn.type = "button";
+        const item = createPowerupItem(num);
+        btn.appendChild(item);
+        btn.onclick = () => {
+            const modalEl = document.getElementById("powerupModal");
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.hide();
+            usePowerUp(num);
+            showPopup(IMAGES.POWERUP[num], POWERUP_TEXT[num]);
+        };
+        container.appendChild(btn);
     });
-    handleGameState(data);
+}
+
+/**
+ * Calls a backend API endpoint and returns the JSON response.
+ */
+async function callGameApi(url, options = {}) {
+    const response = await fetch(url, options);
+    return await response.json();
+}
+
+function createPowerupItem(id) {
+    const imgPath = IMAGES.POWERUP[id];
+    const name = imgPath.split("/").pop().replace(".png", "");
+    const item = document.createElement("div");
+    item.className = "event-powerup-item";
+    const img = document.createElement("img");
+    img.src = imgPath;
+    img.alt = name;
+    img.className = "powerup-icon";
+    const label = document.createElement("div");
+    label.textContent = name;
+    item.appendChild(img);
+    item.appendChild(label);
+    return item;
 }
 
 function calculateVisibleDealerScore(dealerCards) {
@@ -493,158 +574,66 @@ function calculateVisibleDealerScore(dealerCards) {
     return score;
 }
 
-function triggerAnimations(data) {
-    const handsToCheck = data.player_hands || (data.player ? [data.player] : []);
-    const jokerCount = handsToCheck.reduce((count, hand) =>
-        count + hand.filter(([value]) => value === "JOKER").length, 0);
-
-    if (jokerCount > lastJokerCount) {
-        showPopup(IMAGES.JOKER.JOKER);
+/**
+ * Extracts the bet amount from the player's hand.
+ */
+function extractBet(hands) {
+    if (!Array.isArray(hands) || hands.length === 0) {
+        return 0;
     }
-    lastJokerCount = jokerCount;
+    return hands.reduce((sum, hand) => {
+        const betEntry = hand.find(([, suit]) => suit === "BET");
+        return sum + (betEntry ? betEntry[0] : 0);
+    }, 0);
 }
 
-function showPopup(imageSrc, text = null) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "popup";
+function getCardImageSrc(value, suit) {
+    if (suit === "BLACK" || suit === "RED") suit = "JOKER";
+    if (value === "JACK") value = "J";
+    else if (value === "QUEEN") value = "Q";
+    else if (value === "KING") value = "K";
+    else value = value.toString();
 
-    const img = document.createElement("img");
-    img.src = imageSrc;
-    wrapper.appendChild(img);
+    return IMAGES[suit][value];
+}
 
-    if (text) {
-        const textWrapper = document.createElement("div");
-        textWrapper.className = "popup-text-wrapper";
-
-        const label = document.createElement("div");
-        label.className = "popup-text";
-        label.textContent = text;
-
-        textWrapper.appendChild(label);
-        wrapper.appendChild(textWrapper);
+/**
+ * Requests the user's current geographic location.
+ */
+function getLocation() {
+    if (!navigator.geolocation) {
+        x.textContent = "Geolocation is not supported by this browser.";
+        return;
     }
-
-    document.body.appendChild(wrapper);
-
-    requestAnimationFrame(() => {
-        wrapper.classList.add("show");
-    });
-
-    setTimeout(() => {
-        wrapper.classList.remove("show");
-        wrapper.addEventListener("transitionend", () => wrapper.remove(), { once: true });
-    }, 1400);
+    return navigator.geolocation.getCurrentPosition(success, handleError);
 }
 
-function showEventOverlay() {
-    document.getElementById("displayOverlay").classList.remove("hidden");
-    document.body.classList.add("modal-open");
+/**
+ * Handles a successful geolocation request.
+ */
+function success(position) {
+    const { latitude, longitude, altitude } = position.coords;
+    x.innerHTML =
+        `Latitude: ${latitude}<br>` +
+        `Longitude: ${longitude}<br>` +
+        `Altitude: ${altitude ?? "Not available"}`;
 }
 
-function hideEventOverlay() {
-    document.getElementById("displayOverlay").classList.add("hidden");
-    document.body.classList.remove("modal-open");
-}
-
-function setEventContent(node) {
-    const content = document.getElementById("displayContent");
-    content.innerHTML = "";
-    content.appendChild(node);
-}
-
-function eventPowerupsGained(data) {
-    showEventOverlay();
-    const wrapper = document.createElement("div");
-    wrapper.className = "event-box";
-
-    const title = document.createElement("h3");
-    const name = data.player_sign;
-	title.textContent = "Celestial Guidance | " + name[0].toUpperCase() + name.slice(1) + " |";
-    wrapper.appendChild(title);
-
-    const description = document.createElement("p");
-    description.textContent = "The stars align over Vegas, the heavens themselves at your beck and call:";
-    wrapper.appendChild(description);
-
-    const grid = document.createElement("div");
-    grid.className = "event-powerup-grid";
-
-    data.powerups.forEach(id => {
-        grid.appendChild(createPowerupItem(id));
-    });
-
-    wrapper.appendChild(grid);
-    const continueBtn = document.createElement("button");
-    continueBtn.className = "game-button mt-3";
-    continueBtn.textContent = "Continue";
-    continueBtn.onclick = hideEventOverlay;
-
-    wrapper.appendChild(continueBtn);
-    setEventContent(wrapper);
-}
-
-const EVENTS = {
-    POWERUPS_GAINED: eventPowerupsGained,
-};
-
-function triggerEvent(type, data) {
-    if (shownEvents.has(type)) return;
-    shownEvents.add(type);
-    EVENTS[type]?.(data);
-}
-
-function createPowerupItem(id) {
-    const imgPath = IMAGES.POWERUP[id];
-    const name = imgPath.split("/").pop().replace(".png", "");
-    const item = document.createElement("div");
-    item.className = "event-powerup-item";
-    const img = document.createElement("img");
-    img.src = imgPath;
-    img.alt = name;
-    img.className = "powerup-icon";
-    const label = document.createElement("div");
-    label.textContent = name;
-    item.appendChild(img);
-    item.appendChild(label);
-    return item;
-}
-
-function showWinLossPopup(winner, chipsChange) {
-    const popup = document.createElement("div");
-    popup.className = "winloss-popup";
-    
-    if (chipsChange > 0) {
-        popup.classList.add("win");
-    } else if (chipsChange < 0) {
-        popup.classList.add("loss");
-    } else {
-        popup.classList.add("tie");
+/**
+ * Handles errors from the geolocation API.
+ */
+function handleError(err) {
+    switch (err.code) {
+        case err.PERMISSION_DENIED:
+            x.textContent = "User denied the request for Geolocation.";
+            break;
+        case err.POSITION_UNAVAILABLE:
+            x.textContent = "Location information is unavailable.";
+            break;
+        case err.TIMEOUT:
+            x.textContent = "The request to get user location timed out.";
+            break;
+        default:
+            x.textContent = "An unknown error occurred.";
     }
-    
-    const winnerText = document.createElement("div");
-    winnerText.className = "winloss-winner";
-    winnerText.textContent = winner || "Round over";
-    
-    const chipsText = document.createElement("div");
-    chipsText.className = "winloss-chips";
-    if (chipsChange > 0) {
-        chipsText.textContent = `+${chipsChange} chips`;
-    } else if (chipsChange < 0) {
-        chipsText.textContent = `${chipsChange} chips`;
-    } else {
-        chipsText.textContent = "±0 chips";
-    }
-    
-    popup.appendChild(winnerText);
-    popup.appendChild(chipsText);
-    document.body.appendChild(popup);
-    
-    requestAnimationFrame(() => {
-        popup.classList.add("show");
-    });
-    
-    setTimeout(() => {
-        popup.classList.remove("show");
-        popup.addEventListener("transitionend", () => popup.remove(), { once: true });
-    }, 1500);
 }

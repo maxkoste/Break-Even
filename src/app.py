@@ -16,7 +16,6 @@ def main():
     """
     return render_template("index.html")
 
-
 @app.route("/game")
 def game():
     """
@@ -31,6 +30,9 @@ def game():
 
 @app.route("/victory")
 def victory():
+    """
+    Renders the victory page.
+    """
     return render_template("victory.html")
 
 @app.route("/game-over")
@@ -76,15 +78,6 @@ def reset():
     logic.reset_game()
     return redirect("/")
 
-
-@app.route("/api/state")
-def state():
-    """
-    Returns the current game state as JSON.
-    """
-    return jsonify(logic.game_state())
-
-
 @app.route("/api/deal", methods=["POST"])
 def deal():
     """
@@ -103,6 +96,69 @@ def deal():
     logic.bet(bet)
     return jsonify(logic.start_game())
 
+@app.route("/api/hit")
+def hit():
+    """
+    Handles the player hit action by drawing a card.
+
+    Ends the round if the player busts.
+    """
+    return jsonify(logic.perform_hit())
+
+@app.route("/api/stand")
+def stand():
+    """
+    Handles the player stand action and plays the dealer's turn.
+    """
+    result = logic.stand()
+    if result.get("game_over"):
+        logic.next_turn(result.get("winner"))
+  
+    return jsonify(result)
+
+@app.route("/api/split", methods=["POST"])
+def split_action():
+    """
+    Attempts to split the player's current hand into two separate hands.
+
+    This action is only valid when the player has a splittable hand
+    (e.g. two cards of the same value) and enough chips to cover the split bet.
+
+    Returns:
+        200 OK: Updated game state if the split was successful.
+        400 Bad Request: An error message if the split could not be performed.
+    """
+    result = logic.split()
+    if "successful" in result:
+        return jsonify(logic.game_state())
+    
+    return jsonify({"error": result}), 400
+
+
+@app.route("/api/use_powerup", methods=["POST"])
+def use_powerup():
+    """
+    Applies a selected power-up to the current game state.
+    """
+    data = request.get_json()
+    powerup = data.get("num")
+    
+    return jsonify(logic.use_powerup(powerup))
+
+@app.route("/api/draw_card_by_index", methods=["POST"])
+def draw_card_by_index():
+    """
+    Draws a card from the deck at a specified index for the player.
+
+    The deck is rotated to the given index, then a card is drawn for the player's hand.
+
+    Returns the updated game state after the draw, or ends the round if the player busts.
+    """
+    data = request.get_json()
+    index = data.get("index")
+    if not isinstance(index, int) or index < 0:
+        return jsonify({"error": "Invalid index"}), 400
+    return jsonify(logic.perform_hit(rotate_amount=index))
 
 def new_blackjack_deck():
     """
@@ -188,71 +244,6 @@ def get_celestial_data():
     logic.set_celestial_data(results)
 
     return results
-
-
-@app.route("/api/hit")
-def hit():
-    """
-    Handles the player hit action by drawing a card.
-
-    Ends the round if the player busts.
-    """
-    return jsonify(logic.perform_hit())
-
-@app.route("/api/stand")
-def stand():
-    """
-    Handles the player stand action and plays the dealer's turn.
-    """
-    result = logic.stand()
-    if result.get("game_over"):
-        logic.next_turn(result.get("winner"))
-  
-    return jsonify(result)
-
-@app.route("/api/split", methods=["POST"])
-def split_action():
-    """
-    Attempts to split the player's current hand into two separate hands.
-
-    This action is only valid when the player has a splittable hand
-    (e.g. two cards of the same value) and enough chips to cover the split bet.
-
-    Returns:
-        200 OK: Updated game state if the split was successful.
-        400 Bad Request: An error message if the split could not be performed.
-    """
-    result = logic.split()
-    if "successful" in result:
-        return jsonify(logic.game_state())
-    
-    return jsonify({"error": result}), 400
-
-
-@app.route("/api/use_powerup", methods=["POST"])
-def use_powerup():
-    """
-    Applies a selected power-up to the current game state.
-    """
-    data = request.get_json()
-    powerup = data.get("num")
-    
-    return jsonify(logic.use_powerup(powerup))
-
-@app.route("/api/draw_card_by_index", methods=["POST"])
-def draw_card_by_index():
-    """
-    Draws a card from the deck at a specified index for the player.
-
-    The deck is rotated to the given index, then a card is drawn for the player's hand.
-
-    Returns the updated game state after the draw, or ends the round if the player busts.
-    """
-    data = request.get_json()
-    index = data.get("index")
-    if not isinstance(index, int) or index < 0:
-        return jsonify({"error": "Invalid index"}), 400
-    return jsonify(logic.perform_hit(rotate_amount=index))
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
