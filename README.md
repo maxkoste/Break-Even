@@ -18,7 +18,7 @@ Welcome to *Break Even* — a blackjack simulator about pressure, probability, a
 
 ## What This Is
 
-A game hosted on the web built with a JavaScript frontend and a Python backend. The game simulates blackjack with the single objective of returning your balance to zero. You start with $250. You will almost certainly lose. That’s part of the charm.
+A game hosted on the web built with a JavaScript frontend and a Go backend. The game simulates blackjack with the single objective of returning your balance to zero. You start with $250. You will almost certainly lose. That’s part of the charm.
 
 No casinos.  
 No flashy animations.  
@@ -26,7 +26,7 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 
 ### Features
 - A simple, responsive browser UI written in JavaScript.
-- A Python backend that handles shuffling, dealing, hit/stand logic, and balance updates.
+- A Go backend that handles shuffling, dealing, hit/stand logic, and balance updates.
 - A persistent running total of your monstrous debt.
 - The hollow thrill of chasing losses in retro 8-bit style.
 
@@ -45,7 +45,7 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 - Fetch requests to communicate with the backend  
 
 **Backend:**  
-- Python  
+- Go  
 - Deck of Cards API
 - Astronomy API
 - Returns hand results, updated balance, celestial data, powerups, and game state  
@@ -55,33 +55,14 @@ Just you, the deck, and a mounting sense that Mike might never emotionally recov
 
 **Install instructions**
 1. Clone the repository with git or download the zip file from GitHub:
-git clone https://github.com/Love335/BreakEven.git
+git clone https://github.com/maxkoste/Break-Even.git
 
 If you download the zip file, unpack it on your computer.
 
-2. Create and activate a Python virtual environment:
-python -m venv .venv
-source .venv/bin/activate (macOS/Linux)
-.venv\Scripts\activate (Windows)
-
-3. Install dependencies:
-pip install -r requirements.txt
-
-4. Create a .env file in the project root with your API keys. Example:
+2. Create a .env file in the project root with your API keys. Example:
 ASTRONOMY_APP_ID = your_astronomy_app_id
 ASTRONOMY_APP_SECRET = your_astronomy_app_secret
 Note: the .env file should not be uploaded to GitHub or shared publicly.
-
-**Running the Game**
-1. Activate the Python environment (if not already active).
-
-2. Start the backend server:
-flask --debug --app src/app run (with automatic reload)
-flask --app src/app run (without automatic reload)
-
-3. Open your web browser and go to http://localhost:5000/
-
-
 
 # BreakEven - API Documentation
 
