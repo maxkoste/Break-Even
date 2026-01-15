@@ -8,6 +8,7 @@ import (
 	"github.com/maxkoste/Break-Even/internal/state"
 )
 
+// Register routes to the API endpoints
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/ping", ping)
 	mux.HandleFunc("/api/init-game-state", initGameState)
