@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -31,7 +32,14 @@ func reset(w http.ResponseWriter, r *http.Request) {
 }
 
 func deal(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("deal was called")
+	//Struct for storing the JSON data
+	var payload struct {
+		Bet int `json:"bet"`
+	}
+	// decode JSON from the request body, ignoring errors for now
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+
+	fmt.Println("deal was called with bet:", payload.Bet)
 }
 
 func hit(w http.ResponseWriter, r *http.Request) {
