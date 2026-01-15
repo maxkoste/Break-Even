@@ -3,15 +3,14 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/maxkoste/Break-Even/internal/api"
 )
 
 func main() {
 	mux := http.NewServeMux()
-
-	mux.HandleFunc("/api/ping", func(writer http.ResponseWriter, request *http.Request) {
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write([]byte(`{"status":"ok"}`))
-	})
+	
+	api.Register(mux)
 
 	mux.Handle("/static/",
 		http.StripPrefix("/static/",
