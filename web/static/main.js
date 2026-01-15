@@ -166,7 +166,7 @@ function handleRoundState(data) {
 function handleGameState(data, resetDropdown = true) {
     triggerAnimations(data);
     triggerEvent("POWERUPS_GAINED", data);
-    populateModalButtonsFromArray(data.powerups);
+    populateModalButtonsFromArray(data.Powerups);
     dealerCards(data);
     playerHands(data);
     bets(data, resetDropdown);

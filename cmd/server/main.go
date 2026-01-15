@@ -22,6 +22,18 @@ func main() {
 		http.ServeFile(w,r, "web/templates/index.html")
 	})
 
+	mux.HandleFunc("/game", func (w http.ResponseWriter, r *http.Request)  {
+		http.ServeFile(w,r, "web/templates/game.html")
+	})
+
+	mux.HandleFunc("/victory", func (w http.ResponseWriter, r *http.Request)  {
+		http.ServeFile(w,r, "web/templates/victory.html")
+	})
+
+	mux.HandleFunc("/game-over", func (w http.ResponseWriter, r *http.Request)  {
+		http.ServeFile(w,r, "web/templates/game_over.html")
+	})
+
 	log.Println("Server Running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
