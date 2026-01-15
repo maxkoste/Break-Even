@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/maxkoste/Break-Even/internal/state"
 )
 
+// Register routes to the API endpoints
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/ping", ping)
 	mux.HandleFunc("/api/init-game-state", initGameState)
@@ -25,6 +28,22 @@ func ping(w http.ResponseWriter, r *http.Request) {
 
 func initGameState(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("init game state was called")
+
+	var payload struct {
+		SelectedSign string `json:"selectedSign"`
+	}
+
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+
+	game := state.InitGame(payload.SelectedSign)
+
+	w.Header().Set("Content-Type",  "application/json")
+
+	json.NewEncoder(w).Encode(game)
+
+	gameJSON, _ := json.MarshalIndent(game, "", "  ")
+
+	fmt.Printf("Game Data: %s \n", string(gameJSON))
 }
 
 func reset(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +51,7 @@ func reset(w http.ResponseWriter, r *http.Request) {
 }
 
 func deal(w http.ResponseWriter, r *http.Request) {
-	//Struct for storing the JSON data
+	// Struct for storing the JSON data
 	var payload struct {
 		Bet int `json:"bet"`
 	}
@@ -55,6 +74,15 @@ func splitAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func usePowerup(w http.ResponseWriter, r *http.Request) {
+
+	var payload struct {
+		Powerup string `json:"num"`
+	}
+
+	_ = json.NewDecoder(r.Body).Decode(&payload)
+
+	w.Write([]byte(`{"status":"ok"}`))
+
 	fmt.Println("usePowerup was called")
 }
 
