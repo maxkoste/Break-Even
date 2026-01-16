@@ -16,10 +16,6 @@ type CelestialData struct {
 	MoonPhase string
 }
 
-func SayHello(){
-	fmt.Println("hello")
-}
-
 func FetchCelestialData() (*CelestialData, error) {
     appID := os.Getenv("ASTRONOMY_APP_ID")
     appSecret := os.Getenv("ASTRONOMY_APP_SECRET")
