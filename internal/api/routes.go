@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/maxkoste/Break-Even/internal/game"
 	"github.com/maxkoste/Break-Even/internal/state"
 )
+
+var currentGame *state.GameState //routes.go owns the game state for now
 
 // Register routes to the API endpoints
 func Register(mux *http.ServeMux) {
@@ -21,11 +24,13 @@ func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/draw_card_by_index", drawCardByIndex)
 }
 
+// Test
 func ping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status":"ok"}`))
 }
 
+// External API
 func initGameState(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("init game state was called")
 
@@ -35,19 +40,21 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 
 	_ = json.NewDecoder(r.Body).Decode(&payload)
 
-	game := state.InitGame(payload.SelectedSign)
+	currentGame := game.InitGame(payload.SelectedSign)
 
-	w.Header().Set("Content-Type",  "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(game)
+	json.NewEncoder(w).Encode(currentGame)
 
-	gameJSON, _ := json.MarshalIndent(game, "", "  ")
+	gameJSON, _ := json.MarshalIndent(currentGame, "", "  ")
 
 	fmt.Printf("Game Data: %s \n", string(gameJSON))
 }
 
 func reset(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("reset was called")
+
+	game.ResetGame(currentGame)
 }
 
 func deal(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +81,6 @@ func splitAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func usePowerup(w http.ResponseWriter, r *http.Request) {
-
 	var payload struct {
 		Powerup string `json:"num"`
 	}
@@ -88,16 +94,4 @@ func usePowerup(w http.ResponseWriter, r *http.Request) {
 
 func drawCardByIndex(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("drawCardByIndex was called")
-}
-
-func newBlackJackDeck() {
-	fmt.Println("newBlackJackDeck was called")
-}
-
-func drawCards(deckID string, count int) {
-	fmt.Println("drawCards was called")
-}
-
-func getCelestialData() {
-	fmt.Println("getCelestialData was called")
 }
