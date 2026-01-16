@@ -17,5 +17,4 @@ type GameState struct {
 	GameOver        bool              `json:"game_over"`
 	Winner          string            `json:"winner,omitempty"`
 	Victory         bool              `json:"victory"`
-	CelestialData   map[string]string `json:"celestial_data"`
 }

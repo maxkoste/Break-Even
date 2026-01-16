@@ -41,7 +41,6 @@ func InitGame(playerSign string) *state.GameState {
 		PowerupInfo:     []any{},
 		GameStarted:     false,
 		ActiveHandIndex: 1,
-		CelestialData:   map[string]string{},
 		GameOver:        false,
 		Winner:          "",
 		Victory:         false,
@@ -60,7 +59,6 @@ func ResetGame(gs *state.GameState) {
 		gs.PowerupInfo = []any{}
 		gs.GameStarted = false
 		gs.ActiveHandIndex = 1
-		gs.CelestialData = map[string]string{}
 		gs.GameOver = false
 		gs.Winner = ""
 		gs.Victory = false
