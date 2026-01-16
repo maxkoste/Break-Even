@@ -21,11 +21,13 @@ func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/draw_card_by_index", drawCardByIndex)
 }
 
+// Test
 func ping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status":"ok"}`))
 }
 
+// External API
 func initGameState(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("init game state was called")
 
@@ -37,7 +39,7 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 
 	game := state.InitGame(payload.SelectedSign)
 
-	w.Header().Set("Content-Type",  "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(game)
 
@@ -48,6 +50,8 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 
 func reset(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("reset was called")
+
+	state.ResetGame()
 }
 
 func deal(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +78,6 @@ func splitAction(w http.ResponseWriter, r *http.Request) {
 }
 
 func usePowerup(w http.ResponseWriter, r *http.Request) {
-
 	var payload struct {
 		Powerup string `json:"num"`
 	}
@@ -90,6 +93,7 @@ func drawCardByIndex(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("drawCardByIndex was called")
 }
 
+// Internal API
 func newBlackJackDeck() {
 	fmt.Println("newBlackJackDeck was called")
 }
