@@ -26,9 +26,7 @@ var BodyPowerups = map[string]int{
 	"Pluto":   10,
 }
 
-
 func InitGame(playerSign string) *state.GameState {
-
 	return &state.GameState{
 		Chips:      250,
 		Debt:       10000,

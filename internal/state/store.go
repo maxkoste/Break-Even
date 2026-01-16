@@ -1,11 +1,6 @@
 // Package state stores the game state
 package state
 
-type Card struct {
-	Value string `json:"value"`
-	Suit  string `json:"suit"`
-}
-
 type GameState struct {
 	PlayerHands     [][][2]string     `json:"player_hands"`
 	PlayerScores    []int             `json:"player_scores"`
