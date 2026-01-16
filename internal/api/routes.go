@@ -58,6 +58,12 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 		GameState: currentGame,
 	}
 
+	deckID := services.NewDeck()
+	cards := services.DrawCards(deckID, 324)
+
+	fmt.Println("Card ID", deckID) // im just checking if it works !!
+	fmt.Println("Cards: ", cards) // again just checking hehehe !!
+
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(response)
