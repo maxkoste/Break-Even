@@ -65,6 +65,12 @@ func ResetGame(gs *state.GameState) {
 	}
 }
 
+func PopulateDeck(){
+//TODO: populates the games internal data structure with 
+// the cards drawn from the service module 
+
+}
+
 func DrawCard() {}
 
 func StartGame() {}
