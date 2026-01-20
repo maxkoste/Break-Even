@@ -1,4 +1,4 @@
-// package services does services for human kind
+// Package services does services for human kind
 package services
 
 import (

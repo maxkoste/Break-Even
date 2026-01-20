@@ -11,8 +11,9 @@ import (
 )
 
 func main() {
+
 	mux := http.NewServeMux()
-	
+
 	api.Register(mux)
 	api.Handle(mux)
 
@@ -20,8 +21,11 @@ func main() {
 
 	fmt.Printf("deckID: %s \n", deckID)
 
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("Error when loading .env\n" )
+	}
 
 	log.Println("Server Running on http://localhost:8080")
-log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
