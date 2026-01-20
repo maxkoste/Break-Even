@@ -63,32 +63,58 @@ func FetchCelestialData() (*CelestialData, error) {
     results := make(map[string]string)
     moonPhase := ""
 
-    if data, ok := jsonResp["data"].(map[string]any); ok {
-        if table, ok := data["table"].(map[string]any); ok {
-            if rows, ok := table["rows"].([]any); ok {
-                for _, row := range rows {
-                    r := row.(map[string]any)
-                    entry := r["entry"].(map[string]any)
-                    name := entry["name"].(string)
-                    cell := r["cells"].([]any)[0].(map[string]any)
-                    pos := cell["position"].(map[string]any)
-                    constel := pos["constellation"].(map[string]any)["name"].(string)
-                    results[name] = constel
+	data := getMap(jsonResp["data"])
+	table := getMap(data["table"])
+	rows := getSlice(table["rows"])
 
-                    if entry["id"] == "moon" {
-                        if extraInfo, ok := cell["extraInfo"].(map[string]any); ok {
-                            if phase, ok := extraInfo["phase"].(map[string]any)["string"].(string); ok {
-                                moonPhase = phase
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+	for _, row := range rows {
+		r := getMap(row)
+		entry := getMap(r["entry"])
+		name := getString(entry["name"])
+		results[name] = ""
+
+		cells := getSlice(r["cells"])
+		if len(cells) == 0 {
+			continue
+		}
+
+		cell := getMap(cells[0])
+		pos := getMap(cell["position"])
+		constel := getString(getMap(pos["constellation"])["name"])
+		results[name] = constel
+
+		if entry["id"] == "moon" {
+			extraInfo := getMap(cell["extraInfo"])
+			phase := getString(getMap(extraInfo["phase"])["string"])
+			if phase != "" {
+				moonPhase = phase
+			}
+		}
+	}
 
     return &CelestialData{
         Bodies:    results,
         MoonPhase: moonPhase,
     }, nil
+}
+
+func getMap(m any) map[string]any {
+    if m2, ok := m.(map[string]any); ok {
+        return m2
+    }
+    return nil
+}
+
+func getSlice(s any) []any {
+    if s2, ok := s.([]any); ok {
+        return s2
+    }
+    return nil
+}
+
+func getString(s any) string {
+    if str, ok := s.(string); ok {
+        return str
+    }
+    return ""
 }
