@@ -6,10 +6,11 @@ import (
 	"net/http"
 
 	"github.com/maxkoste/Break-Even/internal/game"
+	"github.com/maxkoste/Break-Even/internal/services"
 	"github.com/maxkoste/Break-Even/internal/state"
 )
 
-var currentGame *state.GameState //routes.go owns the game state for now
+var currentGame *state.GameState // routes.go owns the game state for now
 
 // Register routes to the API endpoints
 func Register(mux *http.ServeMux) {
@@ -40,13 +41,34 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 
 	_ = json.NewDecoder(r.Body).Decode(&payload)
 
+	celestialData, err := services.FetchCelestialData()
+	if err != nil {
+		fmt.Println("Error when fetching celestial data")
+	}
+
 	currentGame := game.InitGame(payload.SelectedSign)
+
+	response := struct {
+		CelestialData *services.CelestialData `json:"celestial_data"`
+		DeckReady     bool                    `json:"deck_ready"`
+		GameState     *state.GameState        `json:"game_state"`
+	}{
+		CelestialData: celestialData,
+		DeckReady: false,
+		GameState: currentGame,
+	}
+
+	deckID := services.NewDeck()
+	cards := services.DrawCards(deckID, 324)
+
+	fmt.Println("Card ID", deckID) // im just checking if it works !!
+	fmt.Println("Cards: ", cards) // again just checking hehehe !!
 
 	w.Header().Set("Content-Type", "application/json")
 
-	json.NewEncoder(w).Encode(currentGame)
+	json.NewEncoder(w).Encode(response)
 
-	gameJSON, _ := json.MarshalIndent(currentGame, "", "  ")
+	gameJSON, _ := json.MarshalIndent(response, "", "  ")
 
 	fmt.Printf("Game Data: %s \n", string(gameJSON))
 }

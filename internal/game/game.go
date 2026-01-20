@@ -26,9 +26,7 @@ var BodyPowerups = map[string]int{
 	"Pluto":   10,
 }
 
-
 func InitGame(playerSign string) *state.GameState {
-
 	return &state.GameState{
 		Chips:      250,
 		Debt:       10000,
@@ -39,11 +37,10 @@ func InitGame(playerSign string) *state.GameState {
 		},
 		PlayerScores:    []int{0, 0},
 		Dealer:          [][2]string{}, // empty dealer hand
-		Powerups:        []int{},
+		Powerups:        []int{0,2,3,4,5},
 		PowerupInfo:     []any{},
 		GameStarted:     false,
 		ActiveHandIndex: 1,
-		CelestialData:   map[string]string{},
 		GameOver:        false,
 		Winner:          "",
 		Victory:         false,
@@ -62,11 +59,15 @@ func ResetGame(gs *state.GameState) {
 		gs.PowerupInfo = []any{}
 		gs.GameStarted = false
 		gs.ActiveHandIndex = 1
-		gs.CelestialData = map[string]string{}
 		gs.GameOver = false
 		gs.Winner = ""
 		gs.Victory = false
 	}
+}
+
+func PopulateDeck(){
+//TODO: populates the games internal data structure with 
+// the cards drawn from the service module 
 }
 
 func DrawCard() {}

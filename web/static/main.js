@@ -51,6 +51,10 @@ const EVENTS = {
 };
 
 async function initGameState() {
+
+	localStorage.removeItem("gameData");
+	console.log("Init game state.... ")
+
     const select = document.getElementById("sign");
     const selectedSign = select.value;
 
@@ -60,9 +64,7 @@ async function initGameState() {
         body: JSON.stringify({ selectedSign })
     });
 
-    localStorage.setItem("gameData", JSON.stringify(gameData));
-
-	console.log("printing Game data from initGameFunction " + gameData);
+    localStorage.setItem("gameData", JSON.stringify(gameData.game_state));
 
     window.location.href = "/game";
 }
@@ -319,6 +321,8 @@ function eventPowerupsGained(data) {
 
     const title = document.createElement("h3");
     const name = data.player_sign;
+
+	console.log("Player Sign : ", data.player_sign)
 	title.textContent = "Celestial Guidance | " + name[0].toUpperCase() + name.slice(1) + " |";
     wrapper.appendChild(title);
 
