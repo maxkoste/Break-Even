@@ -37,7 +37,7 @@ func InitGame(playerSign string) *state.GameState {
 		},
 		PlayerScores:    []int{0, 0},
 		Dealer:          [][2]string{}, // empty dealer hand
-		Powerups:        []int{},
+		Powerups:        []int{0,2,3,4,5},
 		PowerupInfo:     []any{},
 		GameStarted:     false,
 		ActiveHandIndex: 1,
@@ -68,7 +68,6 @@ func ResetGame(gs *state.GameState) {
 func PopulateDeck(){
 //TODO: populates the games internal data structure with 
 // the cards drawn from the service module 
-
 }
 
 func DrawCard() {}

@@ -20,7 +20,10 @@ func NewDeck() string {
 	}
 
 	var jsonResp map[string]any
-	json.Unmarshal(body, &jsonResp)
+	unmarshalErr := json.Unmarshal(body, &jsonResp)
+	if unmarshalErr != nil {
+		fmt.Println("Error with unmarshal json ")
+	}
 
 	deckID := jsonResp["deck_id"].(string)
 
@@ -45,7 +48,10 @@ func DrawCards(deckID string, count int) [][2]string {
 	}
 
 	var jsonResp map[string]any
-	json.Unmarshal(body, &jsonResp)
+	unmarshalErr := json.Unmarshal(body, &jsonResp)
+	if unmarshalErr != nil {
+		fmt.Println("Issue with unmarshal")
+	}
 
 	cards := make([][2]string, 0)
 
