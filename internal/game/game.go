@@ -1,9 +1,15 @@
 // Package game contains all the game logic
 package game
 
-import "github.com/maxkoste/Break-Even/internal/state"
+import (
+	"fmt"
 
-type State struct{}
+	"github.com/maxkoste/Break-Even/internal/state"
+)
+
+//TODO: Implement Cards as a stack
+
+var Cards [][2]string
 
 var ValueMap = map[string]int{
 	"ACE":   11,
@@ -65,12 +71,18 @@ func ResetGame(gs *state.GameState) {
 	}
 }
 
-func PopulateDeck(){
-//TODO: populates the games internal data structure with 
-// the cards drawn from the service module 
+func PopulateDeck(newDeck [][2]string){
+	Cards = newDeck
 }
 
-func DrawCard() {}
+func DrawCard(gs *state.GameState, handIndex int) {
+	if handIndex == 0 {
+		fmt.Println("Dealer draws cards")
+	}
+	if handIndex == 1 {
+		fmt.Println("Player draws cards")
+	}
+}
 
 func StartGame() {}
 
@@ -78,8 +90,8 @@ func UsePowerup() {}
 
 func NextTurn() {}
 
-func GameOver() {}
+func GameOver(gs *state.GameState) {}
 
 func DubbleDown() {}
 
-func Split() {}
+func Split(gs *state.GameState) {}

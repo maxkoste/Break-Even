@@ -33,7 +33,6 @@ func ping(w http.ResponseWriter, r *http.Request) {
 
 // External API
 func initGameState(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("init game state was called")
 
 	var payload struct {
 		SelectedSign string `json:"selectedSign"`
@@ -60,17 +59,15 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 
 	deckID := services.NewDeck()
 	cards := services.DrawCards(deckID, 324)
-
-	fmt.Println("Card ID", deckID) // im just checking if it works !!
-	fmt.Println("Cards: ", cards) // again just checking hehehe !!
+	
+	//assign the cards to the game
+	game.PopulateDeck(cards)
 
 	w.Header().Set("Content-Type", "application/json")
-
 	json.NewEncoder(w).Encode(response)
 
-	gameJSON, _ := json.MarshalIndent(response, "", "  ")
-
-	fmt.Printf("Game Data: %s \n", string(gameJSON))
+	// gameJSON, _ := json.MarshalIndent(response, "", "  ")
+	// fmt.Printf("Game Data: %s \n", string(gameJSON))
 }
 
 func reset(w http.ResponseWriter, r *http.Request) {
