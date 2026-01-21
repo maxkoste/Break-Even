@@ -5,15 +5,15 @@ import (
 	"github.com/maxkoste/Break-Even/internal/state"
 )
 
-type Stack struct {
+type CardStack struct {
 	Cards [][2]string
 }
 
-func(s *Stack) Push(card [2]string){
+func(s *CardStack) Push(card [2]string){
 	s.Cards = append(s.Cards, card)
 }
 
-func(s *Stack) Pop() ([2]string, bool){
+func(s *CardStack) Pop() ([2]string, bool){
 	if len(s.Cards)==0{
 		return [2]string{}, false
 	}
@@ -68,7 +68,7 @@ func InitGame(playerSign string) *state.GameState {
 	}
 }
 
-func StartGame(s *Stack, gs *state.GameState){
+func StartGame(s *CardStack, gs *state.GameState){
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 1, s)
@@ -93,11 +93,11 @@ func ResetGame(gs *state.GameState) {
 	}
 }
 
-func (s *Stack) PopulateDeck(newDeck [][2]string){
+func (s *CardStack) PopulateDeck(newDeck [][2]string){
 	s.Cards = newDeck
 }
 
-func DrawCard(gs *state.GameState, handIndex int, deck *Stack) {
+func DrawCard(gs *state.GameState, handIndex int, deck *CardStack) {
 	card, ok := deck.Pop()
 	if !ok{
 		return
