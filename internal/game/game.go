@@ -72,7 +72,7 @@ func StartGame(s *Stack, gs *state.GameState){
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 1, s)
-	DrawCard(gs, 1, s)
+	DrawCard(gs, 0, s)
 }
 
 func ResetGame(gs *state.GameState) {
