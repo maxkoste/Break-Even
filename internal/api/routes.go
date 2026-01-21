@@ -12,7 +12,6 @@ import (
 
 var currentGame *state.GameState // routes.go owns the game state for now
 
-// Register routes to the API endpoints
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/ping", ping)
 	mux.HandleFunc("/api/init-game-state", initGameState)
@@ -31,7 +30,6 @@ func ping(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"ok"}`))
 }
 
-// External API
 func initGameState(w http.ResponseWriter, r *http.Request) {
 
 	var payload struct {
@@ -60,8 +58,9 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 	deckID := services.NewDeck()
 	cards := services.DrawCards(deckID, 324)
 	
-	//assign the cards to the game
-	game.PopulateDeck(cards)
+	cardStack := &game.CardStack{}
+	cardStack.PopulateDeck(cards)
+	game.StartGame(cardStack, currentGame)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
@@ -77,7 +76,6 @@ func reset(w http.ResponseWriter, r *http.Request) {
 }
 
 func deal(w http.ResponseWriter, r *http.Request) {
-	// Struct for storing the JSON data
 	var payload struct {
 		Bet int `json:"bet"`
 	}
@@ -112,5 +110,4 @@ func usePowerup(w http.ResponseWriter, r *http.Request) {
 }
 
 func drawCardByIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("drawCardByIndex was called")
 }

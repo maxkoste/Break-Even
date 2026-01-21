@@ -2,14 +2,28 @@
 package game
 
 import (
-	"fmt"
-
 	"github.com/maxkoste/Break-Even/internal/state"
 )
 
-//TODO: Implement Cards as a stack
+type Stack struct {
+	Cards [][2]string
+}
 
-var Cards [][2]string
+func(s *Stack) Push(card [2]string){
+	s.Cards = append(s.Cards, card)
+}
+
+func(s *Stack) Pop() ([2]string, bool){
+	if len(s.Cards)==0{
+		return [2]string{}, false
+	}
+	lastValue := len(s.Cards)-1
+	value:=s.Cards[lastValue]
+	s.Cards = s.Cards[:lastValue]
+
+	return value, true
+}
+
 
 var ValueMap = map[string]int{
 	"ACE":   11,
@@ -33,6 +47,7 @@ var BodyPowerups = map[string]int{
 }
 
 func InitGame(playerSign string) *state.GameState {
+
 	return &state.GameState{
 		Chips:      250,
 		Debt:       10000,
@@ -53,6 +68,13 @@ func InitGame(playerSign string) *state.GameState {
 	}
 }
 
+func StartGame(s *Stack, gs *state.GameState){
+	DrawCard(gs, 0, s)
+	DrawCard(gs, 0, s)
+	DrawCard(gs, 1, s)
+	DrawCard(gs, 0, s)
+}
+
 func ResetGame(gs *state.GameState) {
 	if gs != nil {
 		gs.Chips = 250
@@ -71,20 +93,22 @@ func ResetGame(gs *state.GameState) {
 	}
 }
 
-func PopulateDeck(newDeck [][2]string){
-	Cards = newDeck
+func (s *Stack) PopulateDeck(newDeck [][2]string){
+	s.Cards = newDeck
 }
 
-func DrawCard(gs *state.GameState, handIndex int) {
+func DrawCard(gs *state.GameState, handIndex int, deck *Stack) {
+	card, ok := deck.Pop()
+	if !ok{
+		return
+	}
 	if handIndex == 0 {
-		fmt.Println("Dealer draws cards")
+		gs.Dealer = append(gs.Dealer, card)
 	}
 	if handIndex == 1 {
-		fmt.Println("Player draws cards")
+		gs.PlayerHands[0] = append(gs.PlayerHands[0], card)
 	}
 }
-
-func StartGame() {}
 
 func UsePowerup() {}
 
