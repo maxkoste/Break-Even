@@ -109,4 +109,5 @@ func usePowerup(w http.ResponseWriter, r *http.Request) {
 }
 
 func drawCardByIndex(w http.ResponseWriter, r *http.Request) {
+
 }

@@ -101,10 +101,10 @@ func (s *CardStack) PopulateDeck(newDeck [][2]string) {
 	s.Cards = newDeck
 }
 
-func DrawCard(gs *GameState, handIndex int, deck *CardStack) {
+func DrawCard(gs *GameState, handIndex int, deck *CardStack) bool {
 	card, ok := deck.Pop()
 	if !ok {
-		return
+		return false
 	}
 	if handIndex == 0 {
 		gs.Dealer = append(gs.Dealer, card)
@@ -112,11 +112,10 @@ func DrawCard(gs *GameState, handIndex int, deck *CardStack) {
 	if handIndex == 1 {
 		gs.PlayerHands[0] = append(gs.PlayerHands[0], card)
 	}
-
-	calcScore(gs, handIndex)
+	return calcScore(gs, handIndex)
 }
 
-func calcScore(gs *GameState, handIndex int) {
+func calcScore(gs *GameState, handIndex int) bool {
 	rawScore := 0
 	aces := 0
 
@@ -168,7 +167,7 @@ func calcScore(gs *GameState, handIndex int) {
 
 	if handIndex == 0 {
 		gs.DealerScore = score
-		return
+		return score > 21
 	}
 
 	gs.PlayerScores[handIndex-1] = score
@@ -179,14 +178,51 @@ func calcScore(gs *GameState, handIndex int) {
 		gs.PlayerScores[handIndex-1] -= additional
 		gs.SaturnActive = false
 	}
+
+	return score > 21
 }
 
-func UsePowerup() {}
+func PerformHit(gs *GameState, rotateAmount int, deck *CardStack) *GameState {
+	// TODO : Not nearly finished here
+	activeHandIndex := gs.ActiveHandIndex
+	busted := DrawCard(gs, activeHandIndex, deck)
 
-func NextTurn() {}
+	if busted {
+		if activeHandIndex < len(gs.PlayerHands)-1 {
+			gs.ActiveHandIndex += 1
+			return gs
+		}
+		
+		resultStr := GameOver(gs)
 
-func GameOver(gs *GameState) {}
+		winner := resultStr
+		chipsWon := 0
 
-func DubbleDown() {}
+		gs.Winner = winner
+		gs.ChipsWon = chipsWon
+		gs.GameOver = true
+
+		ResetGame(gs)
+		return gs
+	}
+	
+	return gs
+}
+
+func GameOver(gs *GameState) string {
+	// TODO : Not nearly finished here either
+	if gs.DealerScore > gs.PlayerScores[0] {
+		return "Dealer Wins"
+	} else if gs.DealerScore < gs.PlayerScores[0]{
+		return "Player Wins!"
+	} else {
+		return "Its a tie"
+	}
+}
+
+func Bet() string{
+	// TODO: implement this shieeet buddy 
+	return "successful"
+}
 
 func Split(gs *GameState) {}
