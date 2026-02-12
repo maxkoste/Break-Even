@@ -1,21 +1,20 @@
 package game
 
 import (
-	"github.com/maxkoste/Break-Even/internal/state"
 	"testing"
 )
 
 func Test_calcScore(t *testing.T) {
 	tests := []struct {
 		name           string
-		gs             *state.GameState
+		gs             *GameState
 		handIndex      int
 		expectedDealer int
 		expectedPlayer []int
 	}{
 		{
 			name: "Dealer simple numeric cards",
-			gs: &state.GameState{
+			gs: &GameState{
 				Dealer:          [][2]string{{"10", "H"}, {"7", "S"}},
 				HandAdjustments: []int{0, 0},
 			},
@@ -24,7 +23,7 @@ func Test_calcScore(t *testing.T) {
 		},
 		{
 			name: "Player face cards",
-			gs: &state.GameState{
+			gs: &GameState{
 				PlayerHands:     [][][2]string{{{"KING", "H"}, {"QUEEN", "S"}}},
 				PlayerScores:    []int{0},
 				HandAdjustments: []int{0, 0},
@@ -34,7 +33,7 @@ func Test_calcScore(t *testing.T) {
 		},
 		{
 			name: "Soft ace adjustment",
-			gs: &state.GameState{
+			gs: &GameState{
 				PlayerHands:     [][][2]string{{{"ACE", "H"}, {"9", "S"}, {"5", "D"}}},
 				PlayerScores:    []int{0},
 				HandAdjustments: []int{0, 0},
@@ -44,7 +43,7 @@ func Test_calcScore(t *testing.T) {
 		},
 		{
 			name: "Saturn wraps score",
-			gs: &state.GameState{
+			gs: &GameState{
 				PlayerHands:     [][][2]string{{{"KING", "H"}, {"KING", "S"}, {"5", "D"}}},
 				PlayerScores:    []int{0},
 				HandAdjustments: []int{0, 0},

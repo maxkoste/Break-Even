@@ -7,10 +7,9 @@ import (
 
 	"github.com/maxkoste/Break-Even/internal/game"
 	"github.com/maxkoste/Break-Even/internal/services"
-	"github.com/maxkoste/Break-Even/internal/state"
 )
 
-var currentGame *state.GameState // routes.go owns the game state for now
+var currentGame *game.GameState // routes.go owns the game state for now
 
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/ping", ping)
@@ -48,7 +47,7 @@ func initGameState(w http.ResponseWriter, r *http.Request) {
 	response := struct {
 		CelestialData *services.CelestialData `json:"celestial_data"`
 		DeckReady     bool                    `json:"deck_ready"`
-		GameState     *state.GameState        `json:"game_state"`
+		GameState     *game.GameState        `json:"game_state"`
 	}{
 		CelestialData: celestialData,
 		DeckReady: false,

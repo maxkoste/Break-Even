@@ -1,5 +1,4 @@
-// Package state stores the game state
-package state
+package game
 
 type GameState struct {
 	PlayerHands     [][][2]string `json:"player_hands"`

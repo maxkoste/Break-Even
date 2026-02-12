@@ -3,8 +3,6 @@ package game
 
 import (
 	"fmt"
-
-	"github.com/maxkoste/Break-Even/internal/state"
 )
 
 type CardStack struct {
@@ -47,8 +45,8 @@ var BodyPowerups = map[string]int{
 	"Pluto":   10,
 }
 
-func InitGame(playerSign string) *state.GameState {
-	return &state.GameState{
+func InitGame(playerSign string) *GameState {
+	return &GameState{
 		Chips:      250,
 		Debt:       10000,
 		PlayerSign: playerSign,
@@ -70,7 +68,7 @@ func InitGame(playerSign string) *state.GameState {
 	}
 }
 
-func StartGame(s *CardStack, gs *state.GameState) *state.GameState {
+func StartGame(s *CardStack, gs *GameState) *GameState {
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 1, s)
@@ -79,7 +77,7 @@ func StartGame(s *CardStack, gs *state.GameState) *state.GameState {
 	return gs
 }
 
-func ResetGame(gs *state.GameState) {
+func ResetGame(gs *GameState) {
 	if gs != nil {
 		gs.Chips = 250
 		gs.Debt = 10000
@@ -103,7 +101,7 @@ func (s *CardStack) PopulateDeck(newDeck [][2]string) {
 	s.Cards = newDeck
 }
 
-func DrawCard(gs *state.GameState, handIndex int, deck *CardStack) {
+func DrawCard(gs *GameState, handIndex int, deck *CardStack) {
 	card, ok := deck.Pop()
 	if !ok {
 		return
@@ -118,7 +116,7 @@ func DrawCard(gs *state.GameState, handIndex int, deck *CardStack) {
 	calcScore(gs, handIndex)
 }
 
-func calcScore(gs *state.GameState, handIndex int) {
+func calcScore(gs *GameState, handIndex int) {
 	rawScore := 0
 	aces := 0
 
@@ -187,8 +185,8 @@ func UsePowerup() {}
 
 func NextTurn() {}
 
-func GameOver(gs *state.GameState) {}
+func GameOver(gs *GameState) {}
 
 func DubbleDown() {}
 
-func Split(gs *state.GameState) {}
+func Split(gs *GameState) {}
