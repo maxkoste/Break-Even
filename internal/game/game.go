@@ -2,6 +2,8 @@
 package game
 
 import (
+	"fmt"
+
 	"github.com/maxkoste/Break-Even/internal/state"
 )
 
@@ -9,21 +11,20 @@ type CardStack struct {
 	Cards [][2]string
 }
 
-func(s *CardStack) Push(card [2]string){
+func (s *CardStack) Push(card [2]string) {
 	s.Cards = append(s.Cards, card)
 }
 
-func(s *CardStack) Pop() ([2]string, bool){
-	if len(s.Cards)==0{
+func (s *CardStack) Pop() ([2]string, bool) {
+	if len(s.Cards) == 0 {
 		return [2]string{}, false
 	}
-	lastValue := len(s.Cards)-1
-	value:=s.Cards[lastValue]
+	lastValue := len(s.Cards) - 1
+	value := s.Cards[lastValue]
 	s.Cards = s.Cards[:lastValue]
 
 	return value, true
 }
-
 
 var ValueMap = map[string]int{
 	"ACE":   11,
@@ -47,7 +48,6 @@ var BodyPowerups = map[string]int{
 }
 
 func InitGame(playerSign string) *state.GameState {
-
 	return &state.GameState{
 		Chips:      250,
 		Debt:       10000,
@@ -56,9 +56,11 @@ func InitGame(playerSign string) *state.GameState {
 			{}, // first hand
 			{}, // second hand
 		},
+		HandAdjustments: []int{0, 0},
+		SaturnActive:    false,
 		PlayerScores:    []int{0, 0},
 		Dealer:          [][2]string{}, // empty dealer hand
-		Powerups:        []int{0,2,3,4,5},
+		Powerups:        []int{0, 2, 3, 4, 5},
 		PowerupInfo:     []any{},
 		GameStarted:     false,
 		ActiveHandIndex: 1,
@@ -68,11 +70,13 @@ func InitGame(playerSign string) *state.GameState {
 	}
 }
 
-func StartGame(s *CardStack, gs *state.GameState){
+func StartGame(s *CardStack, gs *state.GameState) *state.GameState {
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 0, s)
 	DrawCard(gs, 1, s)
 	DrawCard(gs, 0, s)
+
+	return gs
 }
 
 func ResetGame(gs *state.GameState) {
@@ -82,6 +86,8 @@ func ResetGame(gs *state.GameState) {
 		gs.PlayerSign = ""
 		gs.PlayerHands = make([][][2]string, 2)
 		gs.PlayerScores = []int{0, 0}
+		gs.HandAdjustments = []int{0, 0}
+		gs.SaturnActive = false
 		gs.Dealer = [][2]string{}
 		gs.Powerups = []int{}
 		gs.PowerupInfo = []any{}
@@ -93,13 +99,13 @@ func ResetGame(gs *state.GameState) {
 	}
 }
 
-func (s *CardStack) PopulateDeck(newDeck [][2]string){
+func (s *CardStack) PopulateDeck(newDeck [][2]string) {
 	s.Cards = newDeck
 }
 
 func DrawCard(gs *state.GameState, handIndex int, deck *CardStack) {
 	card, ok := deck.Pop()
-	if !ok{
+	if !ok {
 		return
 	}
 	if handIndex == 0 {
@@ -107,6 +113,73 @@ func DrawCard(gs *state.GameState, handIndex int, deck *CardStack) {
 	}
 	if handIndex == 1 {
 		gs.PlayerHands[0] = append(gs.PlayerHands[0], card)
+	}
+
+	calcScore(gs, handIndex)
+}
+
+func calcScore(gs *state.GameState, handIndex int) {
+	rawScore := 0
+	aces := 0
+
+	var hand [][2]string
+
+	if handIndex == 0 {
+		hand = gs.Dealer
+	} else {
+		hand = gs.PlayerHands[handIndex-1]
+	}
+
+	for _, card := range hand {
+		value := card[0]
+
+		if card[1] == "BET" {
+			continue
+		}
+
+		if value == "ACE" {
+			rawScore += 11
+			aces++
+			continue
+		}
+
+		if mapped, exists := ValueMap[value]; exists {
+			rawScore += mapped
+			continue
+		}
+
+		if value != "JOKER" {
+			// numeric card (2-10)
+			var numeric int
+			fmt.Sscanf(value, "%d", &numeric)
+			rawScore += numeric
+		}
+
+		for rawScore > 21 && aces > 0 {
+			rawScore -= 10
+			aces--
+		}
+	}
+
+	for rawScore > 21 && aces > 0 {
+		rawScore -= 10
+		aces -= 1
+	}
+
+	score := rawScore - gs.HandAdjustments[handIndex]
+
+	if handIndex == 0 {
+		gs.DealerScore = score
+		return
+	}
+
+	gs.PlayerScores[handIndex-1] = score
+
+	if score > 21 && gs.SaturnActive {
+		additional := ((score - 1) / 21) * 21
+		gs.HandAdjustments[handIndex] += additional
+		gs.PlayerScores[handIndex-1] -= additional
+		gs.SaturnActive = false
 	}
 }
 

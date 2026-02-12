@@ -11,8 +11,9 @@ import (
 )
 
 func main() {
-
 	mux := http.NewServeMux()
+
+	fmt.Println("Starting server...")
 
 	api.Register(mux)
 	api.Handle(mux)
@@ -23,7 +24,7 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Printf("Error when loading .env\n" )
+		fmt.Printf("Error when loading .env\n")
 	}
 
 	log.Println("Server Running on http://localhost:8080")
